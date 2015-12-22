@@ -1,4 +1,4 @@
-""" support functions for convolutional hebbian network """
+""" support functions for the convolutional hebbian network """
 
 import numpy as np
 import pickle
@@ -45,28 +45,28 @@ def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True
 	if not os.path.exists(dataset_path):
 		raise IOError, "MNIST dataset not found; dataset path does not exists: %s" % dataset_path
 
-	images_train, labels_train 	= load_mnist(classes, dataset_train, dataset_path, pad_size)
+	images_train, labels_train 	= load_preprocess_mnist(classes, dataset_train, dataset_path, pad_size)
 
 	if load_test:
 		dataset_test = 'test' if dataset_train=='train' else 'train'
-		images_test, labels_test = load_mnist(classes, dataset_test, dataset_path, pad_size)
+		images_test, labels_test = load_preprocess_mnist(classes, dataset_test, dataset_path, pad_size)
 	else:
 		images_test, labels_test = np.copy(images_train), np.copy(labels_train)
 
 	return images_train, labels_train, images_test, labels_test
 
-def load_mnist(classes, dataset, dataset_path, pad_size):
+def load_preprocess_mnist(classes, dataset, dataset_path, pad_size):
 	""" Loads, evens out and pads MNIST images """
 
 	print "importing and pre-processing " + dataset + " images..."
-	images, labels = read_images_from_mnist(classes = classes, dataset = dataset, path = dataset_path)
+	images, labels = load_mnist(classes = classes, dataset = dataset, path = dataset_path)
 	images, labels = even_labels(images, labels, classes)
 	images = add_padding(images, pad_size=pad_size, pad_value=0)
 	images += 1e-5 #to avoid division by zero error when the convolving filter takes as input a patch of images that is filled with 0s
 
 	return images, labels
 
-def read_images_from_mnist(classes, dataset = 'train', path = '/Users/raphaelholca/Documents/data-sets/MNIST'):
+def load_mnist(classes, dataset = 'train', path = '/Users/raphaelholca/Documents/data-sets/MNIST'):
     """
     Imports the MNIST dataset
 
@@ -112,7 +112,7 @@ def read_images_from_mnist(classes, dataset = 'train', path = '/Users/raphaelhol
 
 def add_padding(images, pad_size, pad_value=0.):
 	""" 
-	Adds padding of value 1 around images and reshapes images vector to 3D (1D all images + 2D spatial dimensions).
+	Adds padding around images and reshapes images vector to 3D (1D all images + 2D spatial dimensions).
 
 	Args:
 		images (2D numpy array): images to add the padding to; size = (images_num x nPixels_1D)
@@ -143,7 +143,7 @@ def shuffle_images(images, labels):
 
 def even_labels(images, labels, classes):
 	"""
-	Even out images and labels distribution so that they are evenly distributed over the labels.
+	Evens out images and labels distribution so that they are evenly distributed over the labels.
 
 	Args:
 		images (numpy array): images
@@ -167,7 +167,25 @@ def even_labels(images, labels, classes):
 	return images, labels
 
 def propagate(self, image, explore='none', noise_distrib=50):
-	""" Propagates a single image through the network and return its classification along with activation of neurons in the network. """
+	""" 
+	Propagates a single image through the network and return its classification along with activation of neurons in the network. 
+
+	Args:
+		self (Network object): network on which to perform the propagation
+		images (numpy array): 2D input image to propagate
+		explore (str, optional): determines in which layer to add exploration noise; correct values are 'none', 'conv', 'feedf'
+		noise_distrib (int, optional): extend of the uniform distribution from which noise is drawn for exploration
+
+	returns:
+		(int): classifcation of the network
+		(numpy array): input to the convolutional filters
+		(numpy array): activation of the convolutional filters
+		(numpy array): activation of the subsampling layer
+		(numpy array): activation of the feedforward layer
+		(numpy array): activation of the classification layer *without* addition of noise for exploration
+		(numpy array): activation of the classification layer *with* addition of noise for exploration
+
+	"""
 
 	#get input to the convolutional filter
 	conv_input = np.zeros((self.conv_neuron_num, self.conv_filter_side**2))
@@ -310,7 +328,7 @@ def normalize_numba(images, A):
 
 def softmax(activ, implementation='numba', t=1.):
 	"""
-	Softmax function (equivalent to lateral inhibition, or winner-take-all)
+	Softmax function (equivalent to lateral inhibition, or soft winner-take-all)
 
 	Args:
 		activ (numpy array): activation of neurons to be fed to the function; should be (training examples x neurons)
@@ -380,7 +398,7 @@ def propagate_layerwise(input, W, SM=True, t=1.):
 
 def reward_prediction(best_action, action_taken):
 	"""
-	Computes reward prediction based on the best (greedy) action and the action taken
+	Computes reward prediction based on the best (greedy) action and the action taken (differ when noise is added for exploration)
 
 	Args:
 		best_action (numpy array): best (greedy) action for each trial of a batch
@@ -412,7 +430,7 @@ def reward_delivery(labels, actions):
 
 def dopa_release(predicted_reward, delivered_reward):
 	"""
-	Computes the dopa signal based on the actual and predicted rewards
+	Computes the dopamine signal based on the actual and predicted rewards
 
 	Args:
 		predicted_reward (numpy array, bool): predicted reward (True, False)
@@ -473,7 +491,7 @@ def learning_step(self, pre_neurons, post_neurons, W, dopa=None, numba=True):
 
 @numba.njit
 def disinhibition(post_neurons, lr, dopa, post_neurons_lr):
-	""" Support function for numba implementation of learning_step(); must be pure python. """
+	""" Support function for numba implementation of learning_step(). Performs the disinhibition/increase in learning rate due to dopamine. Must be pure python. """
 	for b in range(post_neurons.shape[0]):
 		for pn in range(post_neurons.shape[1]):
 			post_neurons_lr[b, pn] = post_neurons[b, pn] * lr * dopa[b]
@@ -482,7 +500,7 @@ def disinhibition(post_neurons, lr, dopa, post_neurons_lr):
 
 @numba.njit
 def regularization(dot, post_neurons, W, sum_ar):
-	""" Support function for numba implementation of learning_step(); must be pure python. """
+	""" Support function for numba implementation of learning_step(). Regularization of Hebbian learning, prevents weight explosion. Must be pure python. """
 	for j in range(post_neurons.shape[1]):
 		for i in range(post_neurons.shape[0]):
 			sum_ar[j] += post_neurons[i,j]

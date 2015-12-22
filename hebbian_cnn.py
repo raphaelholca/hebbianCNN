@@ -7,8 +7,25 @@ import progressbar
 ex = reload(ex)
 
 class Network:
+	""" This is a Hebbian convolutional neural network """
+	
 	def __init__(self, name, n_epi_crit, n_epi_dopa, A, lr, t, batch_size, conv_map_num, conv_filter_side, feedf_neuron_num, explore):
-		""" set network parameters """
+		""" 
+		Sets network parameters 
+
+			Args:
+				name (str): name of the network, used to save network to disk
+				n_epi_crit (int): number of statistical pre-training steps (pure Hebbian)
+				n_epi_dopa (int): number of dopamine-mediated training steps
+				A (float): parameter for the normalization of the input images (pixel values sum to A)
+				lr (float): learning rate of the network
+				t (float): temperature of the softmax function ('softness' of the winner-take-all)
+				batch_size (int): size of training batch
+				conv_map_num (int): number of convolutional filter maps
+				conv_filter_side (int): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2)
+				feedf_neuron_num (int): number of neurons in the feedforward layer
+				explore (str): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'
+		"""
 		self.name 				= name
 		self.n_epi_crit 		= n_epi_crit
 		self.n_epi_dopa 		= n_epi_dopa
@@ -34,7 +51,7 @@ class Network:
 		self.conv_W, self.feedf_W, self.class_W = ex.init_weights(self, init_file)
 
 	def train(self, images, labels):
-		""" train hebbian convolutional neural network """
+		""" Train hebbian convolutional neural network. """
 		print "training network..."
 		classes = np.sort(np.unique(labels))
 
@@ -99,7 +116,9 @@ class Network:
 		print "test error: %.2F%%" % ((1. - correct/images.shape[0]) * 100)
 
 	def plot_weights(self):
-		""" plot convolutional filter """
+		""" Plots convolutional and feedforward weights """
+
+		#convolutional filter
 		n_rows = int(np.sqrt(self.conv_map_num))
 		n_cols = int(np.ceil(self.conv_map_num/float(n_rows)))
 		fig = plt.figure(figsize=(n_cols,n_rows))
@@ -115,7 +134,7 @@ class Network:
 		plt.subplots_adjust(left=0., right=1., bottom=0., top=1., wspace=0., hspace=0.)
 		plt.show(block=False)
 
-		""" plot reconstruction of preojective fields of output neurons """
+		#reconstruction of preojective fields of output neurons
 		n_rows = int(np.sqrt(self.feedf_neuron_num))
 		n_cols = self.feedf_neuron_num/n_rows
 		fig = plt.figure(figsize=(n_cols,n_rows))
