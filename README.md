@@ -23,4 +23,7 @@ This learning mechanism augments the statistical learning of Hebbian learning to
 <img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/conv_W.png width=400 />
 </p>
 
-###### Projective fields of the weights of the feedforward layer (49 hidden neurons)
+###### Reconstructed projective fields of neurons in the feedforward layer (49 hidden neurons)
+<p align="center">
+<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/feedf_W.png width=600 />
+</p>
