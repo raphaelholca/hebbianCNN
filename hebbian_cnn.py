@@ -62,11 +62,11 @@ class Network:
 				#...of the convolutional maps
 				bs = self.batch_size
 				for b in range(self.conv_neuron_num/bs):
-					dopa_conv = ex.dopa_value(dopa_release, dHigh=2.25, dMid=1.5, dNeut=-0.06, dLow=-1.5)*np.ones(bs) if explore_epi=='conv' else None
+					dopa_conv = ex.dopa_value(dopa_release, dHigh=3.375, dMid=2.25, dNeut=-0.09, dLow=-2.25)*np.ones(bs) if explore_epi=='conv' else None
 					self.conv_W = ex.learning_step(self, conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, dopa=dopa_conv)
 
 				#...of the feedforward layer
-				dopa_feedf = ex.dopa_value(dopa_release, dHigh=2.25, dMid=1.5, dNeut=-0.06, dLow=-1.5) if explore_epi=='feedf' else None
+				dopa_feedf = ex.dopa_value(dopa_release, dHigh=3.375, dMid=2.25, dNeut=-0.09, dLow=-2.25) if explore_epi=='feedf' else None
 				self.feedf_W = ex.learning_step(self, subs_activ, feedf_activ, self.feedf_W, dopa=dopa_feedf)
 
 				#...of the classification layer	
