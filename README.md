@@ -19,6 +19,6 @@ This learning mechanism augments the statistical learning of Hebbian learning to
 #### Examples
 
 ###### Weights of the convolutional maps (20 maps, 5x5 pixels)
-![My image](raphaelholca.github.com/hebbianCNN/docs/conv_W.jpg)
+![conv_W](https://github.com/raphaelholca/hebbianCNN/blob/master/docs/conv_W.png)
 
 ###### Projective fields of the weights of the feedforward layer (49 hidden neurons)
