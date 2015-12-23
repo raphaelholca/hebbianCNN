@@ -20,24 +20,29 @@ This reward-based learning mechanism augments the statistical learning of Hebbia
 
 ###### Weights of the convolutional maps (20 maps, 5x5 pixels)
 <p align="center">
-<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/conv_W.png width=400 />
+<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/conv_W.png width=300 />
 </p>
 
 ###### Reconstructed projective fields of neurons in the feedforward layer (49 hidden neurons)
 <p align="center">
-<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/feedf_W.png width=600 />
+<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/feedf_W.png width=500 />
 </p>
 
 ###### Comparison of weights and classification performance in a network with only Hebbian learning and in a network with both Hebbian and reward-based learning
 <p align="center">
-<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/post-pre_simple.pdf width=600 />
+<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/post-pre_simple-1.png width=400 />
 </p>
 
 #### Code use
 
-The convolutional neural network is object-oriented. The Network class initialize various parameters of the network. These are:
+The convolutional neural network is object-oriented. The Network class initialize various parameters of the neural network and contains functions to initialize the weights, train and test the network and plot the weights of the network. 
 
-- name (str): name of the network, used to save network to disk
+###### hebbian_cnn.Network(name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf')
+
+Hebbian convolutional neural network with reward-based learning
+
+Parameters:
+- name (str, optional): name of the network, used to save network to disk. Default: 'net'
 - n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
 - n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
 - A (float, optional): parameter for the normalization of the input images (pixel values sum to A). Default: 900
@@ -49,8 +54,43 @@ The convolutional neural network is object-oriented. The Network class initializ
 - feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 - explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
 
-The Network object is trained using the train function of the Network class. The train function takes images and labels and modifies the weights of the Network object. The train function returns the training performance of the network.
+Methods:
+- init_weights(images_side, n_classes, init_file="")
+- train(images, labels)
+- test(images, labels)
+- plot()
 
-The performance of the Network object can be tested using the test function of the Network class. The test function takes images and labels and returns the performance of the network of this test dataset.
+###### init_weights(images_side, n_classes, init_file="")
 
-The weights of the Network object can be vizualize using the plot_weights function of the Network class.
+Initializes weights of the network, either random or by loading weights from init_file 
+
+Args:
+- images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
+- n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
+- init_file (str, optional): path to file where weights are saved. Give path to load pretrained weights from file or leave empty for random weigth initialization. Default: ''
+
+###### train(images, labels)
+
+Train Hebbian convolutional neural network
+
+Args: 
+- images (3D numpy array): images to train the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+- labels (1D numpy array): labels of the training images.
+
+returns:
+- (float): training performance of the network.
+
+###### test(images, labels)
+
+Test Hebbian convolutional neural network
+
+Args: 
+- images (3D numpy array): images to test the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+- labels (1D numpy array): labels of the testing images.
+
+returns:
+- (float): testing performance of the network.
+
+###### plot_weights()
+
+Plots convolutional and feedforward weights
