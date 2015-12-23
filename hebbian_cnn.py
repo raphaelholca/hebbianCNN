@@ -7,24 +7,23 @@ import progressbar
 ex = reload(ex)
 
 class Network:
-	""" This is a Hebbian convolutional neural network """
-	
-	def __init__(self, name, n_epi_crit, n_epi_dopa, A, lr, t, batch_size, conv_map_num, conv_filter_side, feedf_neuron_num, explore):
+	""" This is a Hebbian convolutional neural network with reward-based learning """
+	def __init__(self, name, n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf'):
 		""" 
 		Sets network parameters 
 
 			Args:
 				name (str): name of the network, used to save network to disk
-				n_epi_crit (int): number of statistical pre-training steps (pure Hebbian)
-				n_epi_dopa (int): number of dopamine-mediated training steps
-				A (float): parameter for the normalization of the input images (pixel values sum to A)
-				lr (float): learning rate of the network
-				t (float): temperature of the softmax function ('softness' of the winner-take-all)
-				batch_size (int): size of training batch
-				conv_map_num (int): number of convolutional filter maps
-				conv_filter_side (int): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2)
-				feedf_neuron_num (int): number of neurons in the feedforward layer
-				explore (str): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'
+				n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
+				n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
+				A (float, optional): parameter for the normalization of the input images (pixel values sum to A). Default: 900
+				lr (float, optional): learning rate of the network. Default: 0.01
+				t (float, optional): temperature of the softmax function ('softness' of the winner-take-all). Default: 0.01
+				batch_size (int, optional): size of training batch. Default: 196
+				conv_map_num (int, optional): number of convolutional filter maps. Default: 5
+				conv_filter_side (int, optional): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2). Default: 5
+				feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
+				explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
 		"""
 		self.name 				= name
 		self.n_epi_crit 		= n_epi_crit
@@ -37,10 +36,17 @@ class Network:
 		self.conv_map_num 		= conv_map_num
 		self.conv_filter_side 	= conv_filter_side
 		self.feedf_neuron_num 	= feedf_neuron_num
-		self.explore 				= explore
+		self.explore 			= explore
 
 	def init_weights(self, images_side, n_classes, init_file=''):
-		""" initialize weights of the network, either random or by loading weights from init_file """
+		""" 
+		initialize weights of the network, either random or by loading weights from init_file 
+
+			Args:
+				images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
+				n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
+				init_file (str, optional): path to file where weights are saved. Give path to load pretrained weights from file or leave empty for random weigth initialization. Default: ''
+		"""
 		self.images_side 		= images_side
 		self.class_neuron_num 	= n_classes
 		self.init_file			= init_file
@@ -51,7 +57,17 @@ class Network:
 		self.conv_W, self.feedf_W, self.class_W = ex.init_weights(self, init_file)
 
 	def train(self, images, labels):
-		""" Train hebbian convolutional neural network. """
+		""" 
+		Train Hebbian convolutional neural network
+
+			Args: 
+				images (3D numpy array): images to train the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+				labels (1D numpy array): labels of the training images.
+
+			returns:
+				(float): training performance of the network.
+		"""
+		
 		print "training network..."
 		classes = np.sort(np.unique(labels))
 
@@ -98,8 +114,20 @@ class Network:
 			print "train error: %.2F%%" % ((1. - correct/rnd_images.shape[0]) * 100)
 			print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
 
+		return (1. - correct/rnd_images.shape[0])
+
 	def test(self, images, labels):
-		""" test network """
+		""" 
+		Test Hebbian convolutional neural network
+
+			Args: 
+				images (3D numpy array): images to test the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+				labels (1D numpy array): labels of the testing images.
+
+			returns:
+				(float): testing performance of the network.
+		"""
+
 		print "\ntesting network..."
 		classes = np.sort(np.unique(labels))
 
@@ -114,6 +142,8 @@ class Network:
 			classif = ex.propagate(self, images[i,:,:])[0]
 			if classes[classif] == labels[i]: correct += 1.
 		print "test error: %.2F%%" % ((1. - correct/images.shape[0]) * 100)
+
+		return (1. - correct/images.shape[0])
 
 	def plot_weights(self):
 		""" Plots convolutional and feedforward weights """

@@ -8,7 +8,7 @@ import numba
 import matplotlib.pyplot as plt
 from array import array
 
-def init_weights(self, init_file=''):
+def init_weights(net, init_file=''):
 	""" initialize weights of the network, either randomly or by loading saved weights from file """
 	
 	#load pre-trained weights from file
@@ -26,16 +26,16 @@ def init_weights(self, init_file=''):
 	
 	#random initialization
 	else:
-		conv_W_size = ( self.conv_filter_side**2 , self.conv_map_num )
-		conv_W_norm = self.A/(self.conv_filter_side**2) + 2.5
+		conv_W_size = ( net.conv_filter_side**2 , net.conv_map_num )
+		conv_W_norm = net.A/(net.conv_filter_side**2) + 2.5
 		conv_W = np.random.random_sample(size=conv_W_size) + conv_W_norm
 		
-		feedf_W_size = ( (self.subs_map_side**2) * self.conv_map_num , self.feedf_neuron_num )
-		feedf_W_norm = float(self.subs_map_side**2) / ( (self.subs_map_side**2) * self.conv_map_num) + 0.6
+		feedf_W_size = ( (net.subs_map_side**2) * net.conv_map_num , net.feedf_neuron_num )
+		feedf_W_norm = float(net.subs_map_side**2) / ( (net.subs_map_side**2) * net.conv_map_num) + 0.6
 		feedf_W = np.random.random_sample(size=feedf_W_size)/1000 + feedf_W_norm
 		
-		class_W_size = ( self.feedf_neuron_num, self.class_neuron_num )
-		class_W = (np.random.random_sample(size=class_W_size) /1000+1.0) / self.feedf_neuron_num
+		class_W_size = ( net.feedf_neuron_num, net.class_neuron_num )
+		class_W = (np.random.random_sample(size=class_W_size) /1000+1.0) / net.feedf_neuron_num
 
 	return conv_W, feedf_W, class_W
 
@@ -166,12 +166,12 @@ def even_labels(images, labels, classes):
 	images, labels = np.copy(images_even), np.copy(labels_even)
 	return images, labels
 
-def propagate(self, image, explore='none', noise_distrib=50):
+def propagate(net, image, explore='none', noise_distrib=50):
 	""" 
 	Propagates a single image through the network and return its classification along with activation of neurons in the network. 
 
 	Args:
-		self (Network object): network on which to perform the propagation
+		net (Network object): network on which to perform the propagation
 		images (numpy array): 2D input image to propagate
 		explore (str, optional): determines in which layer to add exploration noise; correct values are 'none', 'conv', 'feedf'
 		noise_distrib (int, optional): extend of the uniform distribution from which noise is drawn for exploration
@@ -188,38 +188,38 @@ def propagate(self, image, explore='none', noise_distrib=50):
 	"""
 
 	#get input to the convolutional filter
-	conv_input = np.zeros((self.conv_neuron_num, self.conv_filter_side**2))
-	conv_input = get_conv_input(image, conv_input, self.conv_filter_side)
-	conv_input = normalize_numba(conv_input, self.A)
+	conv_input = np.zeros((net.conv_neuron_num, net.conv_filter_side**2))
+	conv_input = get_conv_input(image, conv_input, net.conv_filter_side)
+	conv_input = normalize_numba(conv_input, net.A)
 
 	#activate convolutional feature maps
-	conv_activ = propagate_layerwise(conv_input, self.conv_W, SM=False)
+	conv_activ = propagate_layerwise(conv_input, net.conv_W, SM=False)
 	if explore=='conv':
 		conv_activ_noise = conv_activ + np.random.uniform(0, noise_distrib, np.shape(conv_activ))
-		conv_activ_noise = softmax(conv_activ_noise, t=self.t)
+		conv_activ_noise = softmax(conv_activ_noise, t=net.t)
 		#subsample feature maps
-		subs_activ_noise = subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
-	conv_activ = softmax(conv_activ, t=self.t)
+		subs_activ_noise = subsample(conv_activ_noise, net.conv_map_side, net.conv_map_num, net.subs_map_side)
+	conv_activ = softmax(conv_activ, t=net.t)
 
 	#subsample feature maps
-	subs_activ = subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side)
+	subs_activ = subsample(conv_activ, net.conv_map_side, net.conv_map_num, net.subs_map_side)
 
 	#activate feedforward layer
-	feedf_activ = propagate_layerwise(subs_activ, self.feedf_W, SM=False)
+	feedf_activ = propagate_layerwise(subs_activ, net.feedf_W, SM=False)
 
 	#add exploration
 	if explore=='feedf':
 		feedf_activ_noise = feedf_activ + np.random.uniform(0, noise_distrib, np.shape(feedf_activ))
 	elif explore=='conv':
-		feedf_activ_noise = propagate_layerwise(subs_activ_noise, self.feedf_W, SM=False)
+		feedf_activ_noise = propagate_layerwise(subs_activ_noise, net.feedf_W, SM=False)
 	if explore=='feedf' or explore=='conv':
-		feedf_activ_noise = softmax(feedf_activ_noise, t=self.t)
-		class_activ_noise = propagate_layerwise(feedf_activ_noise, self.class_W, SM=True, t=0.001)
+		feedf_activ_noise = softmax(feedf_activ_noise, t=net.t)
+		class_activ_noise = propagate_layerwise(feedf_activ_noise, net.class_W, SM=True, t=0.001)
 	
-	feedf_activ = softmax(feedf_activ, t=self.t)
+	feedf_activ = softmax(feedf_activ, t=net.t)
 
 	#activate classification layer
-	class_activ = propagate_layerwise(feedf_activ, self.class_W, SM=True, t=0.001)
+	class_activ = propagate_layerwise(feedf_activ, net.class_W, SM=True, t=0.001)
 
 	if explore=='none':
 		return np.argmax(class_activ), conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ
@@ -457,12 +457,12 @@ def dopa_value(dopa_rel, dHigh, dMid, dNeut, dLow):
 
 	return dopa_val
 
-def learning_step(self, pre_neurons, post_neurons, W, dopa=None, numba=True):
+def learning_step(net, pre_neurons, post_neurons, W, dopa=None, numba=True):
 	"""
 	One learning step for the hebbian network; computes changes in weight, adds the change to the weights and impose bound on weights
 
 	Args:
-		self (Network object): object on which to learn
+		net (Network object): object on which to learn
 		pre_neurons (numpy array): activation of the pre-synaptic neurons
 		post_neurons (numpy array): activation of the post-synaptic neurons
 		W (numpy array): Weight matrix
@@ -477,11 +477,11 @@ def learning_step(self, pre_neurons, post_neurons, W, dopa=None, numba=True):
 		dopa = np.array([dopa])
 
 	if numba:
-		post_neurons_lr = disinhibition(post_neurons, self.lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
+		post_neurons_lr = disinhibition(post_neurons, net.lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
 		dot = np.dot(pre_neurons.T, post_neurons_lr)
 		dW = regularization(dot, post_neurons_lr, W, np.zeros(post_neurons_lr.shape[1]))
 	else:
-		post_neurons_lr = post_neurons * (self.lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
+		post_neurons_lr = post_neurons * (net.lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
 		dW = (np.dot(pre_neurons.T, post_neurons_lr) - np.sum(post_neurons_lr, 0)*W)
 	
 	W += dW
@@ -511,7 +511,7 @@ def regularization(dot, post_neurons, W, sum_ar):
 
 	return dot
 
-def reconstruct(self, W, display_all=False):
+def reconstruct(net, W, display_all=False):
 	"""
 	Reconstructs weights in the layer following the convolutional layer OR reconstructs an input image based on the activation in the sub-sampling layer
 
@@ -519,13 +519,13 @@ def reconstruct(self, W, display_all=False):
 		conv_W (2D numpy array): convolutional filter; size=(filter_side**2, L1_map_num)
 		W (1D or 3D numpy array): weights following the conv+subs layer OR activation in the sub-sampling layer; size=(L1_subs_mapSide, L1_subs_mapSide, L1_map_num)
 	"""
-	filter_side = int(np.sqrt(np.size(self.conv_W,0)))
-	L1_map_num = np.size(self.conv_W,1)
-	n_pixels = self.images_side
+	filter_side = int(np.sqrt(np.size(net.conv_W,0)))
+	L1_map_num = np.size(net.conv_W,1)
+	n_pixels = net.images_side
 	step=1 if n_pixels==18 else 2
 
-	conv_W_plot = np.reshape(self.conv_W, (filter_side, filter_side, L1_map_num))
-	W = np.reshape(W, (self.subs_map_side, self.subs_map_side, L1_map_num))
+	conv_W_plot = np.reshape(net.conv_W, (filter_side, filter_side, L1_map_num))
+	W = np.reshape(W, (net.subs_map_side, net.subs_map_side, L1_map_num))
 
 	recon = np.zeros((n_pixels, n_pixels, L1_map_num))
 	for f in range(L1_map_num):
