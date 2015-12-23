@@ -1,6 +1,6 @@
 # Biology-inspired Convolutional Neural Network
 
-This neural network is an extension of a previous single-layer, reward-based and Hebbian learning network. Learning does not require gradient information or error back-propagation. Instead, weight updates are carried through Hebbian learning augmented with reward-based learning.
+This neural network is an extension of a previous single-layer, reward-based and Hebbian learning network. Learning does not require gradient information or error back-propagation. Instead, weight updates are carried through Hebbian learning augmented with reward-based learning. The network also doesn't have access direct access label information but only to rewards for correct classifications.
 
 In it's shallow form, the network marginally outperfoms gradient-based network of similar architecture on the MNIST dataset (3.3% versus 4.7% error rate; single hidden layer with 300 hidden neurons). The present network extends the shallow architecure to include a convolutional layer, a subsampling layer, an all-to-all feedforward layer and a classification layer. At the moment, the additional layers do not improve the performance of the network (but this is work in progress...).
 
@@ -27,3 +27,30 @@ This reward-based learning mechanism augments the statistical learning of Hebbia
 <p align="center">
 <img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/feedf_W.png width=600 />
 </p>
+
+###### Comparison of weights and classification performance in a network with only Hebbian learning and in a network with both Hebbian and reward-based learning
+<p align="center">
+<img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/post-pre_simple.pdf width=600 />
+</p>
+
+#### Code use
+
+The convolutional neural network is object-oriented. The Network class initialize various parameters of the network. These are:
+
+- name (str): name of the network, used to save network to disk
+- n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
+- n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
+- A (float, optional): parameter for the normalization of the input images (pixel values sum to A). Default: 900
+- lr (float, optional): learning rate of the network. Default: 0.01
+- t (float, optional): temperature of the softmax function ('softness' of the winner-take-all). Default: 0.01
+- batch_size (int, optional): size of training batch. Default: 196
+- conv_map_num (int, optional): number of convolutional filter maps. Default: 5
+- conv_filter_side (int, optional): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2). Default: 5
+- feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
+- explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
+
+The Network object is trained using the train function of the Network class. The train function takes images and labels and modifies the weights of the Network object. The train function returns the training performance of the network.
+
+The performance of the Network object can be tested using the test function of the Network class. The test function takes images and labels and returns the performance of the network of this test dataset.
+
+The weights of the Network object can be vizualize using the plot_weights function of the Network class.
