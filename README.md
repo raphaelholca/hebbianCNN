@@ -16,7 +16,7 @@ The learning mechanism in this neural network is inpisred from dopamine signalli
 
 This reward-based learning mechanism augments the statistical learning of Hebbian learning to include error information. It leads to a progressive refinements of the weights and effectively minimizes the error signal (although no explicit error gradient is used).
 
-#### Examples
+## Examples
 
 ###### Weights of the convolutional maps (20 maps, 5x5 pixels)
 <p align="center">
@@ -33,7 +33,7 @@ This reward-based learning mechanism augments the statistical learning of Hebbia
 <img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/post-pre_simple-1.png width=400 />
 </p>
 
-#### Code use
+## Code use
 
 The convolutional neural network is object-oriented. The Network class initializes parameters of the neural network and contains functions to initialize the weights, train and test the network and plot the weights of the network. 
 
