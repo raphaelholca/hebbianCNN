@@ -35,7 +35,7 @@ This reward-based learning mechanism augments the statistical learning of Hebbia
 
 #### Code use
 
-The convolutional neural network is object-oriented. The Network class initialize various parameters of the neural network and contains functions to initialize the weights, train and test the network and plot the weights of the network. 
+The convolutional neural network is object-oriented. The Network class initializes parameters of the neural network and contains functions to initialize the weights, train and test the network and plot the weights of the network. 
 
 ###### hebbian_cnn.Network(name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf')
 
@@ -58,7 +58,7 @@ Methods:
 - init_weights(images_side, n_classes, init_file="")
 - train(images, labels)
 - test(images, labels)
-- plot()
+- plot_weights()
 
 ###### init_weights(images_side, n_classes, init_file="")
 
@@ -67,14 +67,14 @@ Initializes weights of the network, either random or by loading weights from ini
 Args:
 - images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
 - n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
-- init_file (str, optional): path to file where weights are saved. Give path to load pretrained weights from file or leave empty for random weigth initialization. Default: ''
+- init_file (str, optional): path to file where weights are saved. Give path to load pretrained weights from file or leave empty for random weigth initialization. Default: "" (random initialization)
 
 ###### train(images, labels)
 
-Train Hebbian convolutional neural network
+Trains Hebbian convolutional neural network
 
 Args: 
-- images (3D numpy array): images to train the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+- images (3D numpy array): images to train the Network on. Images matrix must be 3D: [images_num, images_side, images_side] 
 - labels (1D numpy array): labels of the training images.
 
 returns:
@@ -82,10 +82,10 @@ returns:
 
 ###### test(images, labels)
 
-Test Hebbian convolutional neural network
+Tests Hebbian convolutional neural network
 
 Args: 
-- images (3D numpy array): images to test the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+- images (3D numpy array): images to test the Network on. Images matrix must be 3D: [images_num, images_side, images_side] 
 - labels (1D numpy array): labels of the testing images.
 
 returns:
