@@ -18,6 +18,8 @@ This reward-based learning mechanism augments the statistical learning of Hebbia
 
 ## Examples
 
+Weights and performance of the network when trained on the MNIST dataset.
+
 ###### Weights of the convolutional maps (20 maps, 5x5 pixels)
 <p align="center">
 <img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/conv_W.png width=300 />
