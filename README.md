@@ -14,7 +14,7 @@ Reward-based learning is a learning theory related to reinforcement learning. It
 
 The learning mechanism in this neural network is inpisred from dopamine signalling. At presentation of a stimulus, the network outputs a classification for the stimulus. The network also makes a reward prediction (if the network follows a greedy 'policy', it will always predict a reward). If the network correctly classified its input, it then receives a reward; if it incorrectly classified its input, it receives no reward. Reward predictions and deliveries are binary (0,1). The difference between the predicted and delivered rewards makes a RPE; this RPE is broadcasted to all synapses of the network, mimmicking dopamine signalling in animals. The RPE signal affects the learning rate of the network for the current input. Negative RPEs have the learning rate multiplied by a negative constant; positive RPEs have the learning rate multiplied by a positive constant; null RPEs have the learning rate multiplied by zero.
 
-This reward-based learning mechanism augments the statistical learning of Hebbian learning to include error information. It leads to a progressive refinements of the weights and effectively minimizes the error signal (although no explicit error gradient is used).
+This reward-based learning mechanism augments the statistical learning of Hebbian learning to include error information. It leads to a progressive refinements of the weights and effectively minimizes the error signal (although no explicit error gradient is used). See file NeuralFuncApprox.pdf in docs folder for more details.
 
 ## Examples
 
