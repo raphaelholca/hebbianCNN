@@ -7,13 +7,13 @@ import progressbar
 ex = reload(ex)
 
 class Network:
-	""" This is a Hebbian convolutional neural network with reward-based learning """
-	def __init__(self, name, n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf'):
+	""" Hebbian convolutional neural network with reward-based learning """
+	def __init__(self, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf'):
 		""" 
 		Sets network parameters 
 
 			Args:
-				name (str): name of the network, used to save network to disk
+				name (str, optional): name of the network, used to save network to disk. Default: 'net'
 				n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
 				n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
 				A (float, optional): parameter for the normalization of the input images (pixel values sum to A). Default: 900
@@ -38,9 +38,9 @@ class Network:
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
 
-	def init_weights(self, images_side, n_classes, init_file=''):
+	def init_weights(self, images_side, n_classes, init_file=""):
 		""" 
-		initialize weights of the network, either random or by loading weights from init_file 
+		Initializes weights of the network, either random or by loading weights from init_file 
 
 			Args:
 				images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
@@ -61,13 +61,13 @@ class Network:
 		Train Hebbian convolutional neural network
 
 			Args: 
-				images (3D numpy array): images to train the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+				images (3D numpy array): images to train the Network on. images matrix must be 3D: [images_num, images_side, images_side] 
 				labels (1D numpy array): labels of the training images.
 
 			returns:
 				(float): training performance of the network.
 		"""
-		
+
 		print "training network..."
 		classes = np.sort(np.unique(labels))
 
@@ -121,7 +121,7 @@ class Network:
 		Test Hebbian convolutional neural network
 
 			Args: 
-				images (3D numpy array): images to test the Network on. images matrix must be 3D: [num_images, images_side, images_side] 
+				images (3D numpy array): images to test the Network on. images matrix must be 3D: [images_num, images_side, images_side] 
 				labels (1D numpy array): labels of the testing images.
 
 			returns:

@@ -16,8 +16,8 @@ np.random.seed(951)
 
 """ create hebbian convolution neural network """
 net = hebbian_cnn.Network(	name 				= 'test',
-							n_epi_crit 			= 2,
-							n_epi_dopa 			= 2,
+							n_epi_crit 			= 10,
+							n_epi_dopa 			= 10,
 							A 					= 900.,
 							lr 					= 0.01,
 							t 					= 0.01,
@@ -39,7 +39,7 @@ images_train, labels_train, images_test, labels_test = external.load_images(clas
 """ initialize weights of network """
 net.init_weights(	images_side 	= np.size(images_train, 2), 
 					n_classes		= len(np.unique(labels_train)),
-					init_file 		= ''
+					init_file 		= ""
 					)
 
 """ train network """
