@@ -37,11 +37,11 @@ This reward-based learning mechanism augments the statistical learning of Hebbia
 
 The convolutional neural network is object-oriented. The Network class initializes parameters of the neural network and contains functions to initialize the weights, train and test the network and plot the weights of the network. 
 
-###### hebbian_cnn.Network(name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf')
+##### hebbian_cnn.Network(name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf')
 
 Hebbian convolutional neural network with reward-based learning
 
-Parameters:
+###### Parameters:
 - name (str, optional): name of the network, used to save network to disk. Default: 'net'
 - n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
 - n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
@@ -54,43 +54,43 @@ Parameters:
 - feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 - explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
 
-Methods:
+###### Methods:
 - init_weights(images_side, n_classes, init_file="")
 - train(images, labels)
 - test(images, labels)
 - plot_weights()
 
-###### init_weights(images_side, n_classes, init_file="")
+##### init_weights(images_side, n_classes, init_file="")
 
 Initializes weights of the network, either random or by loading weights from init_file 
 
-Args:
+###### Args:
 - images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
 - n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
 - init_file (str, optional): path to file where weights are saved. Give path to load pretrained weights from file or leave empty for random weigth initialization. Default: "" (random initialization)
 
-###### train(images, labels)
+##### train(images, labels)
 
 Trains Hebbian convolutional neural network
 
-Args: 
+###### Args: 
 - images (3D numpy array): images to train the Network on. Images matrix must be 3D: [images_num, images_side, images_side] 
 - labels (1D numpy array): labels of the training images.
 
-returns:
+###### returns:
 - (float): training performance of the network.
 
-###### test(images, labels)
+##### test(images, labels)
 
 Tests Hebbian convolutional neural network
 
-Args: 
+###### Args: 
 - images (3D numpy array): images to test the Network on. Images matrix must be 3D: [images_num, images_side, images_side] 
 - labels (1D numpy array): labels of the testing images.
 
-returns:
+###### returns:
 - (float): testing performance of the network.
 
-###### plot_weights()
+##### plot_weights()
 
 Plots convolutional and feedforward weights
