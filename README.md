@@ -30,7 +30,7 @@ Weights and performance of the network when trained on the MNIST dataset.
 <img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/feedf_W.png width=500 />
 </p>
 
-###### Comparison of weights and classification performance in a network with only Hebbian learning and in a network with both Hebbian and reward-based learning (here, weights from a shallow network with a single hidden layer are depicted)
+###### Comparison of weights and classification performance in a network with only Hebbian learning and in a network with both Hebbian and reward-based learning. Depicted are weights from a shallow network with three hidden units trained on a 3-class (4-7-9) classification task.
 <p align="center">
 <img src=https://github.com/raphaelholca/hebbianCNN/blob/master/docs/post-pre_simple-1.png width=400 />
 </p>
