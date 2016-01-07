@@ -49,10 +49,11 @@ perf_train = net.train(images_train, labels_train)
 perf_test = net.test(images_test, labels_test)
 
 """ plot weights of the network """
-net.plot_weights()
+external.generate_plots(net)
 
 """ save network to disk """
-net.save(overwrite	=	False)
+external.save(	net 		= net,
+				overwrite	=	False)
 
 
 

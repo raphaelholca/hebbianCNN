@@ -76,7 +76,7 @@ class Network:
 				(float): training performance of the network.
 		"""
 
-		print "training network..."
+		print "\ntraining network..."
 		classes = np.sort(np.unique(labels))
 		n_images = images.shape[0]
 		correct = 0.
@@ -150,56 +150,6 @@ class Network:
 		print "test error: %.2F%%" % ((1. - correct/images.shape[0]) * 100)
 
 		return (1. - correct/n_images)
-
-	def plot_weights(self):
-		""" Plots convolutional and feedforward weights """
-
-		#convolutional filter
-		n_rows = int(np.sqrt(self.conv_map_num))
-		n_cols = int(np.ceil(self.conv_map_num/float(n_rows)))
-		fig = plt.figure(figsize=(n_cols,n_rows))
-		
-		for f in range(self.conv_map_num):
-			plt.subplot(n_rows, n_cols, f+1)
-			conv_W_square = np.reshape(self.conv_W[:,f], (self.conv_filter_side, self.conv_filter_side))
-			# plt.imshow(conv_W_square, interpolation='nearest', cmap='Greys', vmin=np.min(self.conv_W), vmax=np.max(self.conv_W))
-			plt.imshow(conv_W_square, interpolation='nearest', cmap='Greys', vmin=np.min(self.conv_W[:,f]), vmax=np.max(self.conv_W[:,f]))
-			plt.xticks([])
-			plt.yticks([])
-		fig.patch.set_facecolor('white')
-		plt.subplots_adjust(left=0., right=1., bottom=0., top=1., wspace=0., hspace=0.)
-		plt.show(block=False)
-
-		#reconstruction of preojective fields of output neurons
-		n_rows = int(np.sqrt(self.feedf_neuron_num))
-		n_cols = self.feedf_neuron_num/n_rows
-		fig = plt.figure(figsize=(n_cols,n_rows))
-		
-		for n in range(self.feedf_neuron_num):
-			plt.subplot(n_rows, n_cols, n)
-			W = np.reshape(self.feedf_W[:,n], (self.subs_map_side, self.subs_map_side, self.conv_map_num))
-			recon_sum = ex.reconstruct(self, W, display_all=False)
-			plt.imshow(recon_sum, interpolation='nearest', cmap='Greys')
-			plt.xticks([])
-			plt.yticks([])
-		fig.patch.set_facecolor('white')
-		plt.subplots_adjust(left=0., right=1., bottom=0., top=1., wspace=0., hspace=0.)
-		plt.show(block=False)
-
-	def save(self, overwrite=False):
-		""" 
-		Saves the network object to disk 
-
-			Args:
-				overwrite (bool, optional): whether to overwrite file if it already exists
-		"""
-		
-		save_path = ex.check_save_file(self, overwrite)
-		os.makedirs(save_path)
-		
-		save_file = open(os.path.join(save_path, 'Network'), 'w')
-		pickle.dump(self, save_file)
-		save_file.close()
 
 
 

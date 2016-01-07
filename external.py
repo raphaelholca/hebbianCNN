@@ -516,6 +516,49 @@ def regularization(dot, post_neurons, W, sum_ar):
 
 	return dot
 
+def generate_plots(net):
+	""" Generate network plots """
+	
+	print "\nplotting weights..."
+
+	plot_conv_filter(net)
+	plot_feedf(net)
+
+def plot_conv_filter(net):
+	""" Plots convolutional weights """
+
+	n_rows = int(np.sqrt(net.conv_map_num))
+	n_cols = int(np.ceil(net.conv_map_num/float(n_rows)))
+	fig = plt.figure(figsize=(n_cols,n_rows))
+	
+	for f in range(net.conv_map_num):
+		plt.subplot(n_rows, n_cols, f+1)
+		conv_W_square = np.reshape(net.conv_W[:,f], (net.conv_filter_side, net.conv_filter_side))
+		# plt.imshow(conv_W_square, interpolation='nearest', cmap='Greys', vmin=np.min(net.conv_W), vmax=np.max(net.conv_W))
+		plt.imshow(conv_W_square, interpolation='nearest', cmap='Greys', vmin=np.min(net.conv_W[:,f]), vmax=np.max(net.conv_W[:,f]))
+		plt.xticks([])
+		plt.yticks([])
+	fig.patch.set_facecolor('white')
+	plt.subplots_adjust(left=0., right=1., bottom=0., top=1., wspace=0., hspace=0.)
+	plt.show(block=False)
+
+def plot_feedf(net):
+	""" Plots feedforward weights """
+	n_rows = int(np.sqrt(net.feedf_neuron_num))
+	n_cols = net.feedf_neuron_num/n_rows
+	fig = plt.figure(figsize=(n_cols,n_rows))
+	
+	for n in range(net.feedf_neuron_num):
+		plt.subplot(n_rows, n_cols, n)
+		W = np.reshape(net.feedf_W[:,n], (net.subs_map_side, net.subs_map_side, net.conv_map_num))
+		recon_sum = reconstruct(net, W, display_all=False)
+		plt.imshow(recon_sum, interpolation='nearest', cmap='Greys')
+		plt.xticks([])
+		plt.yticks([])
+	fig.patch.set_facecolor('white')
+	plt.subplots_adjust(left=0., right=1., bottom=0., top=1., wspace=0., hspace=0.)
+	plt.show(block=False)
+
 def reconstruct(net, W, display_all=False):
 	"""
 	Reconstructs weights in the layer following the convolutional layer OR reconstructs an input image based on the activation in the sub-sampling layer
@@ -554,6 +597,22 @@ def reconstruct(net, W, display_all=False):
 	recon_sum[1::2,1::2]*=1.7
 
 	return recon_sum
+
+def save(net, overwrite=False):
+	""" 
+	Saves the network object to disk 
+
+		Args:
+			net (Network object): Network object to save to disk
+			overwrite (bool, optional): whether to overwrite file if it already exists
+	"""
+	
+	save_path = check_save_file(net, overwrite)
+	os.makedirs(save_path)
+	
+	save_file = open(os.path.join(save_path, 'Network'), 'w')
+	pickle.dump(net, save_file)
+	save_file.close()
 
 def check_save_file(net, overwrite):
 	"""

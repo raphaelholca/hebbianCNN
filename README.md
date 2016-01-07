@@ -60,8 +60,6 @@ Hebbian convolutional neural network with reward-based learning
 - init_weights(images_side, n_classes, init_file='')
 - train(images, labels)
 - test(images, labels)
-- plot_weights()
-- save(overwrite)
 
 ##### init_weights(images_side, n_classes, init_file='')
 
@@ -94,13 +92,3 @@ Tests Hebbian convolutional neural network
 ###### returns:
 - (float): testing performance of the network.
 
-##### plot_weights()
-
-Plots convolutional and feedforward weights
-
-##### save(overwrite=False)
-
-Save Network object to disk
-
-###### Args:
-- overwrite (bool, optional): whether to overwrite file if it already exists
