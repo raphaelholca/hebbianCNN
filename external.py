@@ -7,6 +7,7 @@ Support functions for the convolutional hebbian network.
 
 import numpy as np
 import pickle
+import time
 import os
 import struct
 import numba
@@ -624,6 +625,8 @@ def save(net, overwrite=False, plots={}):
 	pickle.dump(net, save_file)
 	save_file.close()
 
+	print_param(net, save_path)
+
 	for plot in plots.keys():
 		plots[plot].savefig(os.path.join(save_path, plot))
 
@@ -649,6 +652,20 @@ def check_save_file(net, overwrite):
 			postfix += 1
 		return save_path
 
+def print_param(net, save_path):
+	""" Print parameters of Network object to human-readable file """
+
+	tab_length = 25
+
+	param_file = open(os.path.join(save_path, 'params.txt'), 'w')
+	time_str = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+	time_line = ('created on\t: %s\n\n' % time_str).expandtabs(tab_length)
+	param_file.write(time_line)
+
+	for k in sorted(vars(net).keys()):
+		if k!='conv_W' and k!= 'feedf_W' and k!='class_W':
+			line = ('%s \t: %s\n' %( k, str(vars(net)[k]) )).expandtabs(tab_length)
+			param_file.write(line)
 
 
 

@@ -16,7 +16,7 @@ np.random.seed(951)
 
 """ create hebbian convolution neural network """
 net = hebbian_cnn.Network(	name 				= 'test',
-							n_epi_crit 			= 0,
+							n_epi_crit 			= 10,
 							n_epi_dopa 			= 0,
 							A 					= 900.,
 							lr 					= 0.01,
@@ -43,16 +43,16 @@ net.init_weights(	images_side 	= np.size(images_train, 2),
 					)
 
 """ train network """
-perf_train = net.train(images_train, labels_train)
+# perf_train = net.train(images_train, labels_train)
 
 """ test network """
-perf_test = net.test(images_test, labels_test)
+# perf_test = net.test(images_test, labels_test)
 
 """ plot weights of the network """
-plots = external.generate_plots(net)
+# plots = external.generate_plots(net)
 
 """ save network to disk """
-external.save(net, overwrite=False, plots=plots)
+external.save(net, overwrite=False, plots={})
 
 
 
