@@ -2,7 +2,7 @@
 Author: Raphael Holca-Lamarre
 Date: 26/05/2015
 
-This function runs a hebbian convolutional neural network. The network consists of four layers: a convolutional layer, a subsampling layer, a feedforward layer, and a classification layer. Only the three of these layers have modifiable weights: the convolution, feedforward and classification layers. The learning rule is a hebbian learning rule with the addition of a learning mechanism inspired from dopamine signalling in animal cortex.
+This code creates a hebbian convolutional neural network object and trains it on the MNIST dataset. The network consists of four layers: a convolutional layer, a subsampling layer, a feedforward layer and a classification layer. Only three of these layers have modifiable weights: the convolution, feedforward and classification layers. The learning rule is a hebbian learning rule augmented with a learning mechanism inspired from dopamine signalling in animal cortex.
 """
 
 import numpy as np

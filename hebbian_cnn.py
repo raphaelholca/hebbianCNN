@@ -1,4 +1,10 @@
-""" convolutional hebbian neural network """
+""" 
+Author: Raphael Holca-Lamarre
+Date: 26/05/2015
+
+Convolutional Hebbian neural network object.
+"""
+
 import numpy as np
 import external as ex
 import matplotlib.pyplot as plt
