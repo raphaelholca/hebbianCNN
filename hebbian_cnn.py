@@ -10,6 +10,7 @@ import external as ex
 import matplotlib.pyplot as plt
 import progressbar
 import pickle
+import os
 
 ex = reload(ex)
 
@@ -52,7 +53,7 @@ class Network:
 			Args:
 				images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
 				n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
-				init_file (str, optional): path to file where weights are saved. Give path to load pretrained weights from file or leave empty for random weigth initialization. Default: ''
+				init_file (str, optional): path to Network object to load saved weights from. Leave empty for random weigth initialization. Default: ''
 		"""
 		self.images_side 		= images_side
 		self.class_neuron_num 	= n_classes
@@ -77,6 +78,8 @@ class Network:
 
 		print "training network..."
 		classes = np.sort(np.unique(labels))
+		n_images = images.shape[0]
+		correct = 0.
 
 		for e in range(self.n_epi_tot):
 			print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
@@ -121,7 +124,7 @@ class Network:
 			print "train error: %.2F%%" % ((1. - correct/rnd_images.shape[0]) * 100)
 			print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
 
-		return (1. - correct/rnd_images.shape[0])
+		return (1. - correct/n_images)
 
 	def test(self, images, labels):
 		""" 
@@ -132,16 +135,12 @@ class Network:
 				labels (1D numpy array): labels of the testing images.
 
 			returns:
-				(float): testing performance of the network.
+				(float): test performance of the network.
 		"""
 
 		print "\ntesting network..."
 		classes = np.sort(np.unique(labels))
-
-		step = images.shape[0]/(8000/len(classes))
-		if step==0: step=1
-		images=images[::step,:,:]
-		labels=labels[::step]
+		n_images = images.shape[0]
 
 		correct = 0.
 		pbar_epi = progressbar.ProgressBar()
@@ -150,7 +149,7 @@ class Network:
 			if classes[classif] == labels[i]: correct += 1.
 		print "test error: %.2F%%" % ((1. - correct/images.shape[0]) * 100)
 
-		return (1. - correct/images.shape[0])
+		return (1. - correct/n_images)
 
 	def plot_weights(self):
 		""" Plots convolutional and feedforward weights """
@@ -194,8 +193,11 @@ class Network:
 			Args:
 				overwrite (bool, optional): whether to overwrite file if it already exists
 		"""
+		
 		save_path = ex.check_save_file(self, overwrite)
-		save_file = open(save_path, 'w')
+		os.makedirs(save_path)
+		
+		save_file = open(os.path.join(save_path, 'Network'), 'w')
 		pickle.dump(self, save_file)
 		save_file.close()
 

@@ -22,12 +22,12 @@ def init_weights(net, init_file=''):
 			raise IOError, "weight file \'%s\' not found" % init_file
 		
 		f = open(init_file, 'r')
-		weights = pickle.load(f)
+		saved_net = pickle.load(f)
 		f.close()
 
-		conv_W = weights['conv_W']
-		feedf_W = weights['feedf_W']
-		class_W = weights['class_W']
+		conv_W = saved_net.conv_W
+		feedf_W = saved_net.feedf_W
+		class_W = saved_net.class_W
 	
 	#random initialization
 	else:
@@ -568,11 +568,11 @@ def check_save_file(net, overwrite):
 	"""
 
 	save_path = os.path.join('output', net.name)
-	if not os.path.exists(save_path) or overwrite==True:
+	if not os.path.isdir(save_path) or overwrite==True:
 		return save_path
 	else:
 		postfix = 1
-		while os.path.exists(save_path):
+		while os.path.isdir(save_path):
 			save_path = os.path.join('output', net.name + '_' + str(postfix))
 			postfix += 1
 		return save_path

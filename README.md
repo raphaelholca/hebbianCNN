@@ -57,19 +57,20 @@ Hebbian convolutional neural network with reward-based learning
 - explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
 
 ###### Methods:
-- init_weights(images_side, n_classes, init_file="")
+- init_weights(images_side, n_classes, init_file='')
 - train(images, labels)
 - test(images, labels)
 - plot_weights()
+- save(overwrite)
 
-##### init_weights(images_side, n_classes, init_file="")
+##### init_weights(images_side, n_classes, init_file='')
 
 Initializes weights of the network, either random or by loading weights from init_file 
 
 ###### Args:
 - images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
 - n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
-- init_file (str, optional): path to file where weights are saved. Give path to load pretrained weights from file or leave empty for random weigth initialization. Default: "" (random initialization)
+- init_file (str, optional): path to Network object to load saved weights from. Leave empty for random weigth initialization. Default: ''
 
 ##### train(images, labels)
 
@@ -96,3 +97,10 @@ Tests Hebbian convolutional neural network
 ##### plot_weights()
 
 Plots convolutional and feedforward weights
+
+##### save(overwrite=False)
+
+Save Network object to disk
+
+###### Args:
+- overwrite (bool, optional): whether to overwrite file if it already exists
