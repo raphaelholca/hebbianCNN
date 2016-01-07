@@ -9,6 +9,7 @@ import numpy as np
 import external as ex
 import matplotlib.pyplot as plt
 import progressbar
+import pickle
 
 ex = reload(ex)
 
@@ -186,7 +187,17 @@ class Network:
 		plt.subplots_adjust(left=0., right=1., bottom=0., top=1., wspace=0., hspace=0.)
 		plt.show(block=False)
 
+	def save(self, overwrite=False):
+		""" 
+		Saves the network object to disk 
 
+			Args:
+				overwrite (bool, optional): whether to overwrite file if it already exists
+		"""
+		save_path = ex.check_save_file(self, overwrite)
+		save_file = open(save_path, 'w')
+		pickle.dump(self, save_file)
+		save_file.close()
 
 
 

@@ -25,11 +25,11 @@ net = hebbian_cnn.Network(	name 				= 'test',
 							conv_map_num 		= 20,
 							conv_filter_side	= 5,
 							feedf_neuron_num	= 49,
-							explore				= 'feedf'
+							explore				= 'none'
 							)
 
 """ load and pre-process training and testing images """
-images_train, labels_train, images_test, labels_test = external.load_images(classes 		= np.array([ 4, 7 , 9 ], dtype=int),
+images_train, labels_train, images_test, labels_test = external.load_images(classes 		= np.array([ 4, 7, 9 ], dtype=int),
 																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (net.conv_filter_side-1)/2,
@@ -51,7 +51,8 @@ perf_test = net.test(images_test, labels_test)
 """ plot weights of the network """
 net.plot_weights()
 
-
+""" save network to disk """
+net.save(overwrite	=	False)
 
 
 

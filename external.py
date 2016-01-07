@@ -555,8 +555,27 @@ def reconstruct(net, W, display_all=False):
 
 	return recon_sum
 
+def check_save_file(net, overwrite):
+	"""
+	Checks whether file in which to save the network already exists. If it does exist, the file will be overwritten if overwrite==True, otherwise a postfix will be appended to the save name.
 
+	Args:
+		net (Network object): object to save to disk
+		overwrite (bool, optional): whether to overwrite file if it already exists		
 
+	returns:
+		save_path (str): the name of the path where to save the Network object
+	"""
+
+	save_path = os.path.join('output', net.name)
+	if not os.path.exists(save_path) or overwrite==True:
+		return save_path
+	else:
+		postfix = 1
+		while os.path.exists(save_path):
+			save_path = os.path.join('output', net.name + '_' + str(postfix))
+			postfix += 1
+		return save_path
 
 
 
