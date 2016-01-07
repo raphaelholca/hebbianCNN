@@ -16,11 +16,15 @@ ex = reload(ex)
 
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
-	def __init__(self, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf'):
+	
+	def __init__(self, dopa_conv, dopa_feedf, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf'):
 		""" 
 		Sets network parameters 
 
 			Args:
+				dopa_conv (dict): values of dopamine release in the convolutional layer
+				dopa_feedf (dict): values of dopamine release in the feedforward layer
+				dopa_class (dict): values of dopamine release in the classification layer
 				name (str, optional): name of the network, used to save network to disk. Default: 'net'
 				n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
 				n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
@@ -33,6 +37,9 @@ class Network:
 				feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 				explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
 		"""
+		self.dopa_conv 			= dopa_conv
+		self.dopa_feedf 		= dopa_feedf
+		self.dopa_class 		= dopa_class
 		self.name 				= name
 		self.n_epi_crit 		= n_epi_crit
 		self.n_epi_dopa 		= n_epi_dopa
@@ -105,16 +112,16 @@ class Network:
 				#...of the convolutional maps
 				bs = self.batch_size
 				for b in range(self.conv_neuron_num/bs):
-					dopa_conv = ex.dopa_value(dopa_release, dHigh=3.375, dMid=2.25, dNeut=-0.09, dLow=-2.25)*np.ones(bs) if explore_epi=='conv' else None
-					self.conv_W = ex.learning_step(self, conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, dopa=dopa_conv)
+					dopa_release_conv = ex.dopa_value(dopa_release, self.dopa_conv)*np.ones(bs) if explore_epi=='conv' else None
+					self.conv_W = ex.learning_step(self, conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, dopa=dopa_release_conv)
 
 				#...of the feedforward layer
-				dopa_feedf = ex.dopa_value(dopa_release, dHigh=3.375, dMid=2.25, dNeut=-0.09, dLow=-2.25) if explore_epi=='feedf' else None
-				self.feedf_W = ex.learning_step(self, subs_activ, feedf_activ, self.feedf_W, dopa=dopa_feedf)
+				dopa_release_feedf = ex.dopa_value(dopa_release, self.dopa_feedf) if explore_epi=='feedf' else None
+				self.feedf_W = ex.learning_step(self, subs_activ, feedf_activ, self.feedf_W, dopa=dopa_release_feedf)
 
 				#...of the classification layer	
-				dopa_class = ex.dopa_value(dopa_release, dHigh=0.375, dMid=0.375, dNeut=-0.25, dLow=-0.25)
-				self.class_W = ex.learning_step(self, feedf_activ, class_activ, self.class_W, dopa=dopa_class)
+				dopa_release_class = ex.dopa_value(dopa_release, self.dopa_class)
+				self.class_W = ex.learning_step(self, feedf_activ, class_activ, self.class_W, dopa=dopa_release_class)
 
 				dopa_save = np.append(dopa_save, dopa_release)
 				correct += float(classes[np.argmax(class_activ)] == rnd_labels[i])

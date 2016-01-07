@@ -446,20 +446,20 @@ def dopa_release(predicted_reward, delivered_reward):
 		numpy array: array of dopamine release value
 	"""
 
-	if 		predicted_reward==0 and delivered_reward==1: dopa = 'dHigh'				#unpredicted reward
-	elif 	predicted_reward==1 and delivered_reward==1: dopa = 'dMid'				#correct reward prediction
-	elif	predicted_reward==0 and delivered_reward==0: dopa = 'dNeut'				#correct no reward prediction
-	elif 	predicted_reward==1 and delivered_reward==0: dopa = 'dLow'				#incorrect reward prediction
+	if 		predicted_reward==0 and delivered_reward==1: dopa = '-e+r'				#unpredicted reward
+	elif 	predicted_reward==1 and delivered_reward==1: dopa = '+e+r'				#predicted reward
+	elif	predicted_reward==0 and delivered_reward==0: dopa = '-e-r'				#predicted no reward
+	elif 	predicted_reward==1 and delivered_reward==0: dopa = '+e-r'				#unpredicted no reward
 
 	return dopa
 
-def dopa_value(dopa_rel, dHigh, dMid, dNeut, dLow):
+def dopa_value(dopa_rel, dopa):
 	""" Returns the value associated with each dopa release """
 
-	if 		dopa_rel == 'dHigh'	: dopa_val = dHigh				#unpredicted reward
-	elif 	dopa_rel == 'dMid'	: dopa_val = dMid				#correct reward prediction
-	elif	dopa_rel == 'dNeut'	: dopa_val = dNeut				#correct no reward prediction
-	elif 	dopa_rel == 'dLow' 	: dopa_val = dLow				#incorrect reward prediction
+	if 		dopa_rel == '-e+r'	: dopa_val = dopa['-e+r']				#unpredicted reward
+	elif 	dopa_rel == '+e+r'	: dopa_val = dopa['+e+r']				#predicted reward
+	elif	dopa_rel == '-e-r'	: dopa_val = dopa['-e-r']				#predicted no reward
+	elif 	dopa_rel == '+e-r' 	: dopa_val = dopa['+e-r']				#unpredicted no reward
 
 	return dopa_val
 

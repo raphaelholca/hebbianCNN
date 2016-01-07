@@ -15,9 +15,12 @@ reload(hebbian_cnn)
 np.random.seed(951)
 
 """ create hebbian convolution neural network """
-net = hebbian_cnn.Network(	name 				= 'test',
-							n_epi_crit 			= 10,
-							n_epi_dopa 			= 0,
+net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, '+e-r':-1.8},
+							dopa_feedf			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, '+e-r':-1.8},
+							dopa_class			= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2},
+							name 				= 'test',
+							n_epi_crit 			= 0,
+							n_epi_dopa 			= 2,
 							A 					= 900.,
 							lr 					= 0.01,
 							t 					= 0.01,
@@ -25,7 +28,7 @@ net = hebbian_cnn.Network(	name 				= 'test',
 							conv_map_num 		= 20,
 							conv_filter_side	= 5,
 							feedf_neuron_num	= 49,
-							explore				= 'none'
+							explore				= 'feedf'
 							)
 
 """ load and pre-process training and testing images """
@@ -39,17 +42,17 @@ images_train, labels_train, images_test, labels_test = external.load_images(clas
 """ initialize weights of network """
 net.init_weights(	images_side 	= np.size(images_train, 2), 
 					n_classes		= len(np.unique(labels_train)),
-					init_file 		= 'output/saved/Network'
+					init_file 		= 'output/pre_trained/Network'
 					)
 
 """ train network """
-# perf_train = net.train(images_train, labels_train)
+perf_train = net.train(images_train, labels_train)
 
 """ test network """
-# perf_test = net.test(images_test, labels_test)
+perf_test = net.test(images_test, labels_test)
 
 """ plot weights of the network """
-# plots = external.generate_plots(net)
+plots = external.generate_plots(net)
 
 """ save network to disk """
 external.save(net, overwrite=False, plots={})

@@ -39,11 +39,14 @@ Weights and performance of the network when trained on the MNIST dataset.
 
 The convolutional neural network is object-oriented. The Network class initializes parameters of the neural network and contains functions to initialize the weights, train and test the network and plot the weights of the network. The launch.py file contains example for using the neural network.
 
-##### hebbian_cnn.Network(name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf')
+##### hebbian_cnn.Network(dopa_conv, dopa_feedf, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf')
 
 Hebbian convolutional neural network with reward-based learning
 
 ###### Parameters:
+- dopa_conv (dict): values of dopamine release in the convolutional layer
+- dopa_feedf (dict): values of dopamine release in the feedforward layer
+- dopa_class (dict): values of dopamine release in the classification layer
 - name (str, optional): name of the network, used to save network to disk. Default: 'net'
 - n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
 - n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
