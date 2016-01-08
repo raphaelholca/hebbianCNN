@@ -155,7 +155,7 @@ class Network:
 		correct = 0.
 		pbar_epi = progressbar.ProgressBar()
 		for i in pbar_epi(range(images.shape[0])):
-			classif = hp.propagate(self, images[i,:,:])[0]
+			classif = self._propagate(images[i,:,:])[0]
 			if classes[classif] == labels[i]: correct += 1.
 		print "test error: %.2F%%" % ((1. - correct/images.shape[0]) * 100)
 
