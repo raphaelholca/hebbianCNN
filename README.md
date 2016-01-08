@@ -2,7 +2,7 @@
 
 This neural network is an extension of a previous single-layer, reward-based and Hebbian learning network. Learning does not require gradient information or error back-propagation. Instead, weight updates are carried through Hebbian learning augmented with reward-based learning. The network also doesn't have access direct access label information but only to rewards for correct classifications.
 
-In it's shallow form, the network marginally outperfoms gradient-based network of similar architecture on the MNIST dataset (3.3% versus 4.7% error rate; single hidden layer with 300 hidden neurons). The present network extends the shallow architecure to include a convolutional layer, a subsampling layer, an all-to-all feedforward layer and a classification layer. At the moment, the additional layers do not improve the performance of the network (but this is work in progress...).
+In it's shallow form, the network marginally outperfoms gradient-based network of similar architecture on the MNIST dataset (3.3% versus 4.7% error rate; single hidden layer with 300 hidden neurons). The present network extends the shallow architecure to include a convolutional layer, a subsampling layer, an all-to-all feedforward layer and a classification layer. At the moment, the additional layers do not improve the performance of the network (but this is work in progress!).
 
 #### Hebbian Learning
 

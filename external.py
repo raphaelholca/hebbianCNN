@@ -14,37 +14,6 @@ import numba
 import matplotlib.pyplot as plt
 from array import array
 
-def init_weights(net, init_file=''):
-	""" initialize weights of the network, either randomly or by loading saved weights from file """
-	
-	#load pre-trained weights from file
-	if init_file != '':
-		if not os.path.exists(init_file):
-			raise IOError, "weight file \'%s\' not found" % init_file
-		
-		f = open(init_file, 'r')
-		saved_net = pickle.load(f)
-		f.close()
-
-		conv_W = saved_net.conv_W
-		feedf_W = saved_net.feedf_W
-		class_W = saved_net.class_W
-	
-	#random initialization
-	else:
-		conv_W_size = ( net.conv_filter_side**2 , net.conv_map_num )
-		conv_W_norm = net.A/(net.conv_filter_side**2) + 2.5
-		conv_W = np.random.random_sample(size=conv_W_size) + conv_W_norm
-		
-		feedf_W_size = ( (net.subs_map_side**2) * net.conv_map_num , net.feedf_neuron_num )
-		feedf_W_norm = float(net.subs_map_side**2) / ( (net.subs_map_side**2) * net.conv_map_num) + 0.6
-		feedf_W = np.random.random_sample(size=feedf_W_size)/1000 + feedf_W_norm
-		
-		class_W_size = ( net.feedf_neuron_num, net.class_neuron_num )
-		class_W = (np.random.random_sample(size=class_W_size) /1000+1.0) / net.feedf_neuron_num
-
-	return conv_W, feedf_W, class_W
-
 def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True):
 	""" load images training and testing images """
 	
@@ -171,68 +140,6 @@ def even_labels(images, labels, classes):
 		labels_even[i*m:(i+1)*m] = labels[labels==c][0:m]
 	images, labels = np.copy(images_even), np.copy(labels_even)
 	return images, labels
-
-def propagate(net, image, explore='none', noise_distrib=50):
-	""" 
-	Propagates a single image through the network and return its classification along with activation of neurons in the network. 
-
-	Args:
-		net (Network object): network on which to perform the propagation
-		images (numpy array): 2D input image to propagate
-		explore (str, optional): determines in which layer to add exploration noise; correct values are 'none', 'conv', 'feedf'
-		noise_distrib (int, optional): extend of the uniform distribution from which noise is drawn for exploration
-
-	returns:
-		(int): classifcation of the network
-		(numpy array): input to the convolutional filters
-		(numpy array): activation of the convolutional filters
-		(numpy array): activation of the subsampling layer
-		(numpy array): activation of the feedforward layer
-		(numpy array): activation of the classification layer *without* addition of noise for exploration
-		(numpy array): activation of the classification layer *with* addition of noise for exploration
-
-	"""
-
-	#get input to the convolutional filter
-	conv_input = np.zeros((net.conv_neuron_num, net.conv_filter_side**2))
-	conv_input = get_conv_input(image, conv_input, net.conv_filter_side)
-	conv_input = normalize_numba(conv_input, net.A)
-
-	#activate convolutional feature maps
-	conv_activ = propagate_layerwise(conv_input, net.conv_W, SM=False)
-	if explore=='conv':
-		conv_activ_noise = conv_activ + np.random.uniform(0, noise_distrib, np.shape(conv_activ))
-		conv_activ_noise = softmax(conv_activ_noise, t=net.t)
-		#subsample feature maps
-		subs_activ_noise = subsample(conv_activ_noise, net.conv_map_side, net.conv_map_num, net.subs_map_side)
-	conv_activ = softmax(conv_activ, t=net.t)
-
-	#subsample feature maps
-	subs_activ = subsample(conv_activ, net.conv_map_side, net.conv_map_num, net.subs_map_side)
-
-	#activate feedforward layer
-	feedf_activ = propagate_layerwise(subs_activ, net.feedf_W, SM=False)
-
-	#add exploration
-	if explore=='feedf':
-		feedf_activ_noise = feedf_activ + np.random.uniform(0, noise_distrib, np.shape(feedf_activ))
-	elif explore=='conv':
-		feedf_activ_noise = propagate_layerwise(subs_activ_noise, net.feedf_W, SM=False)
-	if explore=='feedf' or explore=='conv':
-		feedf_activ_noise = softmax(feedf_activ_noise, t=net.t)
-		class_activ_noise = propagate_layerwise(feedf_activ_noise, net.class_W, SM=True, t=0.001)
-	
-	feedf_activ = softmax(feedf_activ, t=net.t)
-
-	#activate classification layer
-	class_activ = propagate_layerwise(feedf_activ, net.class_W, SM=True, t=0.001)
-
-	if explore=='none':
-		return np.argmax(class_activ), conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ
-	elif explore=='feedf':
-		return np.argmax(class_activ), conv_input, conv_activ, subs_activ, feedf_activ_noise, class_activ, class_activ_noise
-	elif explore=='conv':
-		return np.argmax(class_activ), conv_input, conv_activ_noise, subs_activ, feedf_activ, class_activ, class_activ_noise
 
 @numba.njit
 def get_conv_input(image, conv_input, conv_side):
@@ -463,38 +370,6 @@ def dopa_value(dopa_rel, dopa):
 
 	return dopa_val
 
-def learning_step(net, pre_neurons, post_neurons, W, dopa=None, numba=True):
-	"""
-	One learning step for the hebbian network; computes changes in weight, adds the change to the weights and impose bound on weights
-
-	Args:
-		net (Network object): object on which to learn
-		pre_neurons (numpy array): activation of the pre-synaptic neurons
-		post_neurons (numpy array): activation of the post-synaptic neurons
-		W (numpy array): Weight matrix
-		dopa (numpy array, optional): learning rate increase for the effect of dopamine
-
-	returns:
-		numpy array: change in weight; must be added to the weight matrix W
-	"""
-	if dopa is None: 
-		dopa = np.ones(post_neurons.shape[0])
-	elif isinstance(dopa, float): 
-		dopa = np.array([dopa])
-
-	if numba:
-		post_neurons_lr = disinhibition(post_neurons, net.lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
-		dot = np.dot(pre_neurons.T, post_neurons_lr)
-		dW = regularization(dot, post_neurons_lr, W, np.zeros(post_neurons_lr.shape[1]))
-	else:
-		post_neurons_lr = post_neurons * (net.lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
-		dW = (np.dot(pre_neurons.T, post_neurons_lr) - np.sum(post_neurons_lr, 0)*W)
-	
-	W += dW
-	W = np.clip(W, 1e-10, np.inf)
-
-	return W
-
 @numba.njit
 def disinhibition(post_neurons, lr, dopa, post_neurons_lr):
 	""" Support function for numba implementation of learning_step(). Performs the disinhibition/increase in learning rate due to dopamine. Must be pure python. """
@@ -618,7 +493,7 @@ def save(net, overwrite=False, plots={}):
 	
 	print "\nsaving network..."
 
-	save_path = check_save_file(net, overwrite)
+	save_path = check_save_file(net.name, overwrite)
 	os.makedirs(save_path)
 	
 	save_file = open(os.path.join(save_path, 'Network'), 'w')
@@ -630,25 +505,25 @@ def save(net, overwrite=False, plots={}):
 	for plot in plots.keys():
 		plots[plot].savefig(os.path.join(save_path, plot))
 
-def check_save_file(net, overwrite):
+def check_save_file(name, overwrite):
 	"""
 	Checks whether file in which to save the network already exists. If it does exist, the file will be overwritten if overwrite==True, otherwise a postfix will be appended to the save name.
 
 	Args:
-		net (Network object): object to save to disk
+		name (str): name of the network
 		overwrite (bool, optional): whether to overwrite file if it already exists		
 
 	returns:
 		save_path (str): the name of the path where to save the Network object
 	"""
 
-	save_path = os.path.join('output', net.name)
+	save_path = os.path.join('output', name)
 	if not os.path.isdir(save_path) or overwrite==True:
 		return save_path
 	else:
 		postfix = 1
 		while os.path.isdir(save_path):
-			save_path = os.path.join('output', net.name + '_' + str(postfix))
+			save_path = os.path.join('output', name + '_' + str(postfix))
 			postfix += 1
 		return save_path
 
