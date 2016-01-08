@@ -6,10 +6,10 @@ This code creates a hebbian convolutional neural network object and trains it on
 """
 
 import numpy as np
-import external
+import helper
 import hebbian_cnn
 
-reload(external)
+reload(helper)
 reload(hebbian_cnn)
 
 np.random.seed(951)
@@ -32,7 +32,7 @@ net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, 
 							)
 
 """ load and pre-process training and testing images """
-images_train, labels_train, images_test, labels_test = external.load_images(classes 		= np.array([ 4, 7, 9 ], dtype=int),
+images_train, labels_train, images_test, labels_test = helper.load_images(	classes 		= np.array([ 4, 7, 9 ], dtype=int),
 																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (net.conv_filter_side-1)/2,
@@ -52,10 +52,10 @@ perf_train = net.train(images_train, labels_train)
 perf_test = net.test(images_test, labels_test)
 
 """ plot weights of the network """
-plots = external.generate_plots(net)
+plots = helper.generate_plots(net)
 
 """ save network to disk """
-external.save(net, overwrite=False, plots={})
+helper.save(net, overwrite=False, plots={})
 
 
 

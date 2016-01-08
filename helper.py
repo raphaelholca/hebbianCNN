@@ -2,7 +2,7 @@
 Author: Raphael Holca-Lamarre
 Date: 26/05/2015
 
-Support functions for the convolutional hebbian network.
+Helper functions for the convolutional hebbian network.
 """
 
 import numpy as np

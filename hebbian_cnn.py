@@ -6,13 +6,13 @@ Convolutional Hebbian neural network object.
 """
 
 import numpy as np
-import external as ex
+import helper as hp
 import matplotlib.pyplot as plt
 import progressbar
 import pickle
 import os
 
-ex = reload(ex)
+hp = reload(hp)
 
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
@@ -94,7 +94,7 @@ class Network:
 		for e in range(self.n_epi_tot):
 			print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
 			
-			rnd_images, rnd_labels = ex.shuffle_images(images, labels)
+			rnd_images, rnd_labels = hp.shuffle_images(images, labels)
 			last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
 			dopa_save = np.array([])
 			correct = 0.
@@ -107,23 +107,23 @@ class Network:
 				classif, conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ_noise = self._propagate(rnd_images[i,:,:], explore=explore_epi)
 
 				#compute reward prediction, reward delivery and dopamine release
-				reward_pred = ex.reward_prediction(np.argmax(class_activ), np.argmax(class_activ_noise))
-				reward = ex.reward_delivery(rnd_labels[i], classes[np.argmax(class_activ_noise)])
-				dopa_release = ex.dopa_release(reward_pred, reward)
+				reward_pred = hp.reward_prediction(np.argmax(class_activ), np.argmax(class_activ_noise))
+				reward = hp.reward_delivery(rnd_labels[i], classes[np.argmax(class_activ_noise)])
+				dopa_release = hp.dopa_release(reward_pred, reward)
 					
 				# learn weights...
 				#...of the convolutional maps
 				bs = self.batch_size
 				for b in range(self.conv_neuron_num/bs):
-					dopa_release_conv = ex.dopa_value(dopa_release, self.dopa_conv)*np.ones(bs) if explore_epi=='conv' else None
+					dopa_release_conv = hp.dopa_value(dopa_release, self.dopa_conv)*np.ones(bs) if explore_epi=='conv' else None
 					self.conv_W = self._learning_step(conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, dopa=dopa_release_conv)
 
 				#...of the feedforward layer
-				dopa_release_feedf = ex.dopa_value(dopa_release, self.dopa_feedf) if explore_epi=='feedf' else None
+				dopa_release_feedf = hp.dopa_value(dopa_release, self.dopa_feedf) if explore_epi=='feedf' else None
 				self.feedf_W = self._learning_step(subs_activ, feedf_activ, self.feedf_W, dopa=dopa_release_feedf)
 
 				#...of the classification layer	
-				dopa_release_class = ex.dopa_value(dopa_release, self.dopa_class)
+				dopa_release_class = hp.dopa_value(dopa_release, self.dopa_class)
 				self.class_W = self._learning_step(feedf_activ, class_activ, self.class_W, dopa=dopa_release_class)
 
 				dopa_save = np.append(dopa_save, dopa_release)
@@ -155,7 +155,7 @@ class Network:
 		correct = 0.
 		pbar_epi = progressbar.ProgressBar()
 		for i in pbar_epi(range(images.shape[0])):
-			classif = ex.propagate(self, images[i,:,:])[0]
+			classif = hp.propagate(self, images[i,:,:])[0]
 			if classes[classif] == labels[i]: correct += 1.
 		print "test error: %.2F%%" % ((1. - correct/images.shape[0]) * 100)
 
@@ -214,37 +214,37 @@ class Network:
 
 		#get input to the convolutional filter
 		conv_input = np.zeros((self.conv_neuron_num, self.conv_filter_side**2))
-		conv_input = ex.get_conv_input(image, conv_input, self.conv_filter_side)
-		conv_input = ex.normalize_numba(conv_input, self.A)
+		conv_input = hp.get_conv_input(image, conv_input, self.conv_filter_side)
+		conv_input = hp.normalize_numba(conv_input, self.A)
 
 		#activate convolutional feature maps
-		conv_activ = ex.propagate_layerwise(conv_input, self.conv_W, SM=False)
+		conv_activ = hp.propagate_layerwise(conv_input, self.conv_W, SM=False)
 		if explore=='conv':
 			conv_activ_noise = conv_activ + np.random.uniform(0, noise_distrib, np.shape(conv_activ))
-			conv_activ_noise = ex.softmax(conv_activ_noise, t=self.t)
+			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
 			#subsample feature maps
-			subs_activ_noise = ex.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
-		conv_activ = ex.softmax(conv_activ, t=self.t)
+			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
+		conv_activ = hp.softmax(conv_activ, t=self.t)
 
 		#subsample feature maps
-		subs_activ = ex.subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side)
+		subs_activ = hp.subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side)
 
 		#activate feedforward layer
-		feedf_activ = ex.propagate_layerwise(subs_activ, self.feedf_W, SM=False)
+		feedf_activ = hp.propagate_layerwise(subs_activ, self.feedf_W, SM=False)
 
 		#add exploration
 		if explore=='feedf':
 			feedf_activ_noise = feedf_activ + np.random.uniform(0, noise_distrib, np.shape(feedf_activ))
 		elif explore=='conv':
-			feedf_activ_noise = ex.propagate_layerwise(subs_activ_noise, self.feedf_W, SM=False)
+			feedf_activ_noise = hp.propagate_layerwise(subs_activ_noise, self.feedf_W, SM=False)
 		if explore=='feedf' or explore=='conv':
-			feedf_activ_noise = ex.softmax(feedf_activ_noise, t=self.t)
-			class_activ_noise = ex.propagate_layerwise(feedf_activ_noise, self.class_W, SM=True, t=0.001)
+			feedf_activ_noise = hp.softmax(feedf_activ_noise, t=self.t)
+			class_activ_noise = hp.propagate_layerwise(feedf_activ_noise, self.class_W, SM=True, t=0.001)
 		
-		feedf_activ = ex.softmax(feedf_activ, t=self.t)
+		feedf_activ = hp.softmax(feedf_activ, t=self.t)
 
 		#activate classification layer
-		class_activ = ex.propagate_layerwise(feedf_activ, self.class_W, SM=True, t=0.001)
+		class_activ = hp.propagate_layerwise(feedf_activ, self.class_W, SM=True, t=0.001)
 
 		if explore=='none':
 			return np.argmax(class_activ), conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ
@@ -272,9 +272,9 @@ class Network:
 			dopa = np.array([dopa])
 
 		if numba:
-			post_neurons_lr = ex.disinhibition(post_neurons, self.lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
+			post_neurons_lr = hp.disinhibition(post_neurons, self.lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
 			dot = np.dot(pre_neurons.T, post_neurons_lr)
-			dW = ex.regularization(dot, post_neurons_lr, W, np.zeros(post_neurons_lr.shape[1]))
+			dW = hp.regularization(dot, post_neurons_lr, W, np.zeros(post_neurons_lr.shape[1]))
 		else:
 			post_neurons_lr = post_neurons * (self.lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
 			dW = (np.dot(pre_neurons.T, post_neurons_lr) - np.sum(post_neurons_lr, 0)*W)
