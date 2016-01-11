@@ -53,14 +53,14 @@ class Network:
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
 
-	def init_weights(self, images_side, n_classes, init_file=''):
+	def init_weights(self, images_side, n_classes, init_file=None):
 		""" 
 		Initializes weights of the network, either randomly or by loading weights from init_file 
 
 			Args:
 				images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
 				n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
-				init_file (str, optional): path to Network object to load saved weights from. Leave empty for random weigth initialization. Default: ''
+				init_file (str, optional): path to Network object to load saved weights from. Leave empty for random weigth initialization. Default: None
 		"""
 		self.images_side 		= images_side
 		self.class_neuron_num 	= n_classes
@@ -69,8 +69,8 @@ class Network:
 		self.conv_map_side 		= int(np.sqrt(self.conv_neuron_num))
 		self.subs_map_side 		= self.conv_map_side/2
 
-		if init_file != '':
-			self._init_weights_file(init_file)
+		if self.init_file != '' and self.init_file != None:
+			self._init_weights_file()
 		else:
 			self._init_weights_random()
 
@@ -176,13 +176,13 @@ class Network:
 		class_W_size = ( self.feedf_neuron_num, self.class_neuron_num )
 		self.class_W = (np.random.random_sample(size=class_W_size) /1000+1.0) / self.feedf_neuron_num
 
-	def _init_weights_file(self, init_file):
+	def _init_weights_file(self):
 		""" initialize weights of the network by loading saved weights from file """
 
-		if not os.path.exists(init_file):
-			raise IOError, "weight file \'%s\' not found" % init_file
+		if not os.path.exists(self.init_file):
+			raise IOError, "weight file \'%s\' not found" % self.init_file
 		
-		f = open(init_file, 'r')
+		f = open(self.init_file, 'r')
 		saved_net = pickle.load(f)
 		f.close()
 
