@@ -111,7 +111,7 @@ class Network:
 				reward = hp.reward_delivery(rnd_labels[i], classes[np.argmax(class_activ_noise)])
 				dopa_release = hp.dopa_release(reward_pred, reward)
 					
-				# learn weights...
+				# update weights...
 				#...of the convolutional maps
 				bs = self.batch_size
 				for b in range(self.conv_neuron_num/bs):
