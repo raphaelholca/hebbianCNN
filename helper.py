@@ -500,7 +500,7 @@ def save(net, overwrite=False, plots={}):
 	pickle.dump(net, save_file)
 	save_file.close()
 
-	print_param(net, save_path)
+	print_params(net, save_path)
 
 	for plot in plots.keys():
 		plots[plot].savefig(os.path.join(save_path, plot))
@@ -527,7 +527,7 @@ def check_save_file(name, overwrite):
 			postfix += 1
 		return save_path
 
-def print_param(net, save_path):
+def print_params(net, save_path):
 	""" Print parameters of Network object to human-readable file """
 
 	tab_length = 25
@@ -541,6 +541,7 @@ def print_param(net, save_path):
 		if k!='conv_W' and k!= 'feedf_W' and k!='class_W':
 			line = ('%s \t: %s\n' %( k, str(vars(net)[k]) )).expandtabs(tab_length)
 			param_file.write(line)
+	param_file.close()
 
 
 
