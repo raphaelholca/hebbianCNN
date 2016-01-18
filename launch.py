@@ -18,22 +18,22 @@ np.random.seed(951)
 net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, '+e-r':-1.8},
 							dopa_feedf			= {'-e+r':4.5, '+e+r':0.02, '-e-r':-0.01, '+e-r':-2.0},
 							dopa_class			= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2},
-							name 				= 'test',
-							n_epi_crit 			= 2,
-							n_epi_dopa 			= 2,
+							name 				= 'long',
+							n_epi_crit 			= 30,
+							n_epi_dopa 			= 30,
 							A 					= 900.,
 							lr 					= 0.01,
 							t 					= 0.01,
 							batch_size 			= 196,
 							conv_map_num 		= 20,
 							conv_filter_side	= 5,
-							feedf_neuron_num	= 49,
+							feedf_neuron_num	= 150,
 							explore				= 'feedf',
-							init_file 			= 'output/conv_pre_trained/Network'
+							init_file 			= None
 							)
 
 """ load and pre-process training and testing images """
-images_train, labels_train, images_test, labels_test = helper.load_images(	classes 		= np.array([ 4, 7, 9 ], dtype=int),
+images_train, labels_train, images_test, labels_test = helper.load_images(	classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
 																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (net.conv_filter_side-1)/2,

@@ -20,7 +20,9 @@ def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True
 	""" load images training and testing images """
 	
 	if not os.path.exists(dataset_path):
-		raise IOError, "MNIST dataset not found; dataset path does not exists: %s" % dataset_path
+		dataset_path = '/mnt/antares_raid/home/raphaelholca/Documents/data-sets/MNIST'
+		if not os.path.exists(dataset_path):
+			raise IOError, "MNIST dataset not found; dataset path does not exists: %s" % dataset_path
 
 	images_train, labels_train 	= load_preprocess_mnist(classes, dataset_train, dataset_path, pad_size)
 
