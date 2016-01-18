@@ -504,6 +504,7 @@ def save(net, overwrite=False, plots={}):
 
 	for plot in plots.keys():
 		plots[plot].savefig(os.path.join(save_path, plot))
+		plt.close(plots[plot])
 
 def check_save_file(name, overwrite):
 	"""

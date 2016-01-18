@@ -52,6 +52,8 @@ class Network:
 		self.conv_filter_side 	= conv_filter_side
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
+		self.perf_train 		= np.zeros(self.n_epi_tot)
+		self.perf_test 			= 0.
 
 	def init_weights(self, images_side, n_classes, init_file=None):
 		""" 
@@ -68,6 +70,7 @@ class Network:
 		self.conv_neuron_num 	= (images_side - self.conv_filter_side + 1)**2
 		self.conv_map_side 		= int(np.sqrt(self.conv_neuron_num))
 		self.subs_map_side 		= self.conv_map_side/2
+		self.CM 				= np.zeros((n_classes, n_classes))
 
 		if self.init_file != '' and self.init_file != None:
 			self._init_weights_file()
@@ -130,6 +133,7 @@ class Network:
 				correct += float(classes[np.argmax(class_activ)] == rnd_labels[i])
 				last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==classes)] += 1
 
+			self.perf_train[e] = correct
 			correct_class_W = np.sum(np.argmax(last_neuron_class,1)==np.argmax(self.class_W,1))
 			print "train error: %.2F%%" % ((1. - correct/rnd_images.shape[0]) * 100)
 			print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
@@ -152,14 +156,22 @@ class Network:
 		classes = np.sort(np.unique(labels))
 		n_images = images.shape[0]
 
-		correct = 0.
+		classResults = np.zeros(len(labels))
+		self.perf_test = 0.
 		pbar_epi = progressbar.ProgressBar()
 		for i in pbar_epi(range(images.shape[0])):
-			classif = self._propagate(images[i,:,:])[0]
-			if classes[classif] == labels[i]: correct += 1.
-		print "test error: %.2F%%" % ((1. - correct/images.shape[0]) * 100)
+			class_output = self._propagate(images[i,:,:])[0]
+			if classes[class_output] == labels[i]: self.perf_test += 1.
+			classResults[i] = classes[class_output]
+		print "test error: %.2F%%" % ((1. - self.perf_test/images.shape[0]) * 100)
 
-		return (1. - correct/n_images)
+		for ilabel,label in enumerate(classes):
+			for iclassif, classif in enumerate(classes):
+				classifiedAs = np.sum(np.logical_and(labels==label, classResults==classif))
+				overTot = np.sum(labels==label)
+				self.CM[ilabel, iclassif] = float(classifiedAs)/overTot
+
+		return (1. - self.perf_test/n_images)
 
 
 	def _init_weights_random(self):
@@ -170,8 +182,9 @@ class Network:
 		self.conv_W = np.random.random_sample(size=conv_W_size) + conv_W_norm
 		
 		feedf_W_size = ( (self.subs_map_side**2) * self.conv_map_num , self.feedf_neuron_num )
-		feedf_W_norm = float(self.subs_map_side**2) / ( (self.subs_map_side**2) * self.conv_map_num) + 0.6
-		self.feedf_W = np.random.random_sample(size=feedf_W_size)/1000 + feedf_W_norm
+		# feedf_W_norm = float(self.subs_map_side**2) / ( (self.subs_map_side**2) * self.conv_map_num) + 0.6
+		# self.feedf_W = np.random.random_sample(size=feedf_W_size)/1000 + feedf_W_norm
+		self.feedf_W = np.random.random_sample(size=feedf_W_size) + 1.0
 		
 		class_W_size = ( self.feedf_neuron_num, self.class_neuron_num )
 		self.class_W = (np.random.random_sample(size=class_W_size) /1000+1.0) / self.feedf_neuron_num
@@ -192,7 +205,7 @@ class Network:
 
 		del saved_net
 
-	def _propagate(self, image, explore='none', noise_distrib=50):
+	def _propagate(self, image, explore='none', noise_distrib=0.2):
 		""" 
 		Propagates a single image through the network and return its classification along with activation of neurons in the network. 
 
@@ -220,7 +233,7 @@ class Network:
 		#activate convolutional feature maps
 		conv_activ = hp.propagate_layerwise(conv_input, self.conv_W, SM=False)
 		if explore=='conv':
-			conv_activ_noise = conv_activ + np.random.uniform(0, noise_distrib, np.shape(conv_activ))
+			conv_activ_noise = conv_activ + np.random.normal(0, np.std(feedf_activ)*noise_distrib, np.shape(feedf_activ))
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
@@ -234,7 +247,7 @@ class Network:
 
 		#add exploration
 		if explore=='feedf':
-			feedf_activ_noise = feedf_activ + np.random.uniform(0, noise_distrib, np.shape(feedf_activ))
+			feedf_activ_noise = feedf_activ + np.random.normal(0, np.std(feedf_activ)*noise_distrib, np.shape(feedf_activ))
 		elif explore=='conv':
 			feedf_activ_noise = hp.propagate_layerwise(subs_activ_noise, self.feedf_W, SM=False)
 		if explore=='feedf' or explore=='conv':
