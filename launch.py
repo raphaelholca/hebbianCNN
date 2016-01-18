@@ -18,9 +18,9 @@ np.random.seed(951)
 net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, '+e-r':-1.8},
 							dopa_feedf			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, '+e-r':-1.8},
 							dopa_class			= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2},
-							name 				= 'test',
-							n_epi_crit 			= 0,
-							n_epi_dopa 			= 1,
+							name 				= 'no_conv',
+							n_epi_crit 			= 3,
+							n_epi_dopa 			= 4,
 							A 					= 900.,
 							lr 					= 0.01,
 							t 					= 0.01,
@@ -42,7 +42,7 @@ images_train, labels_train, images_test, labels_test = helper.load_images(	class
 """ initialize weights of network """
 net.init_weights(	images_side 	= np.size(images_train, 2), 
 					n_classes		= len(np.unique(labels_train)),
-					init_file 		= 'output/pre_trained/Network'
+					init_file 		= None#'output/pre_trained/Network'
 					)
 
 """ train network """
@@ -55,7 +55,7 @@ perf_test = net.test(images_test, labels_test)
 plots = helper.generate_plots(net)
 
 """ save network to disk """
-helper.save(net, overwrite=False, plots={})
+helper.save(net, overwrite=False, plots=plots)
 
 
 
