@@ -115,9 +115,9 @@ class Network:
 				correct += float(self.classes[np.argmax(class_activ)] == rnd_labels[i])
 				last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==self.classes)] += 1
 
-			self.perf_train[e] = correct
+			self.perf_train[e] = 1. - correct/rnd_images.shape[0]
 			correct_class_W = np.sum(np.argmax(last_neuron_class,1)==np.argmax(self.class_W,1))
-			print "train error: %.2F%%" % ((1. - correct/rnd_images.shape[0]) * 100)
+			print "train error: %.2F%%" % (self.perf_train[e] * 100)
 			print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
 
 		return (1. - correct/n_images)
@@ -144,7 +144,8 @@ class Network:
 			class_output = self._propagate(images[i,:,:])[0]
 			if self.classes[class_output] == labels[i]: self.perf_test += 1.
 			classResults[i] = self.classes[class_output]
-		print "test error: %.2F%%" % ((1. - self.perf_test/images.shape[0]) * 100)
+		self.perf_test = (1. - self.perf_test/n_images)
+		# print "test error: %.2F%%" % ((1. - self.perf_test/images.shape[0]) * 100)
 
 		for ilabel,label in enumerate(self.classes):
 			for iclassif, classif in enumerate(self.classes):
@@ -152,7 +153,9 @@ class Network:
 				overTot = np.sum(labels==label)
 				self.CM[ilabel, iclassif] = float(classifiedAs)/overTot
 
-		return (1. - self.perf_test/n_images)
+		hp.print_CM(self.perf_test, self.CM, self.classes)
+
+		return self.perf_test
 
 	def _init_weights(self):
 		"""	Initializes weights of the network, either randomly or by loading weights from init_file """

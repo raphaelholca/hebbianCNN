@@ -13,6 +13,7 @@ import struct
 import numba
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.cm as cm
 from array import array
 
 def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True):
@@ -393,6 +394,20 @@ def regularization(dot, post_neurons, W, sum_ar):
 
 	return dot
 
+def print_CM(perf, CM, classes):
+	""" print confusion matrix """
+	perf_print = ''
+	perf_print += '\nconfusion matrix:' + '\n'
+	c_str = ''
+	for c in classes: c_str += str(c).rjust(6)
+	perf_print += c_str + '\n'
+	perf_print += '-'*(len(c_str)+3) + '\n'
+	perf_print += str(np.round(CM,2)) + '\n'
+	perf_print += '\ntest performance:' + '\n'
+	perf_print += str(np.round(100*perf,2)) + ' %' # + ' +/- ' + str(np.round(100*perf_ste,2)) + ' %' + '\n'
+
+	print perf_print
+
 def generate_plots(net):
 	""" Generate network plots """
 	
@@ -400,8 +415,10 @@ def generate_plots(net):
 
 	all_plots = {}
 	
-	all_plots['conv_W'] 	= plot_conv_filter(net)
-	all_plots['feedf_W'] 	= plot_feedf(net)
+	all_plots['conv_W'] 		= plot_conv_filter(net)
+	all_plots['feedf_W'] 		= plot_feedf(net)
+	all_plots['CM']		 		= plot_CM(net)
+	all_plots['perf_progress']	= plot_perf_progress(net)
 
 	return all_plots
 
@@ -482,18 +499,18 @@ def reconstruct(net, W, display_all=False):
 
 	return recon_sum
 
-def plot_CM(confusion_matrix, classes):
+def plot_CM(net):
 	""" plots the confusion matrix, with color on the diagonal, and with the alphas indicating the magnitude of the error """
 
 	#create a transparent colormap
-	n_classes = len(classes)
+	n_classes = len(net.classes)
 	cmap_trans = mpl.colors.LinearSegmentedColormap.from_list('my_cmap',['white','white'],256) 
 	cmap_trans._init()
 	alphas = np.linspace(1.0, 0, cmap_trans.N+3)
 	cmap_trans._lut[:,-1] = alphas
 
 	#creates the background color matrix
-	color_matrix = np.ones_like(confusion_matrix)
+	color_matrix = np.ones_like(net.CM)
 	np.fill_diagonal(color_matrix, -1.0)
 
 	#plot the matrix and number values
@@ -501,10 +518,10 @@ def plot_CM(confusion_matrix, classes):
 	sV = 0.9+0.5*n_classes
 	fig, ax = plt.subplots(figsize=(sH,sV))
 	ax.imshow(color_matrix, interpolation='nearest', cmap='RdYlGn_r', vmin=-1.2, vmax=1.2)
-	ax.imshow(confusion_matrix, interpolation='nearest', cmap=cmap_trans, vmin=-0.0, vmax=1)
+	ax.imshow(net.CM, interpolation='nearest', cmap=cmap_trans, vmin=-0.0, vmax=1)
 	for i in range(n_classes):
 		for j in range(n_classes):
-			perc = int(np.round(confusion_matrix[i,j],2)*100)
+			perc = int(np.round(net.CM[i,j],2)*100)
 			ax.annotate(perc, xy=(0, 0),  xycoords='data', xytext=(j, i), textcoords='data', size=15, ha='center', va='center')
 
 	#plot parameters
@@ -515,13 +532,42 @@ def plot_CM(confusion_matrix, classes):
 	ax.spines['top'].set_visible(False)
 	ax.set_xticks(np.arange(n_classes))
 	ax.set_yticks(np.arange(n_classes))
-	ax.set_xticklabels(classes, fontsize=18)
-	ax.set_yticklabels(classes, fontsize=18)
+	ax.set_xticklabels(net.classes, fontsize=18)
+	ax.set_yticklabels(net.classes, fontsize=18)
 	ax.xaxis.set_ticks_position('none')
 	ax.yaxis.set_ticks_position('none')
 	ax.set_xlabel('prediction', fontsize=17)
 	ax.set_ylabel('label', fontsize=18)
 	plt.tight_layout()
+
+	return fig
+
+def plot_perf_progress(net, epi_start=0):
+	"""
+	plots the progression of the error rate over training episodes
+
+	Args:
+		epi_start (int, optional): episode at which to start the plot (used epi_start=n_epi_crit to plot only after statistical pre-training). Default: 0 
+	"""
+
+	fig, ax = plt.subplots()
+	plt.gca().set_color_cycle(cm.Paired(i) for i in np.linspace(0,0.9,10))
+
+	X = np.arange( len(net.perf_train[epi_start:]) )+1
+	ax.plot(X, net.perf_train[epi_start:]*100, lw=3)
+
+	fig.patch.set_facecolor('white')
+	ax.spines['right'].set_visible(False)
+	ax.spines['top'].set_visible(False)
+	ax.tick_params(axis='both', which='major', direction='out', labelsize=17)
+	ax.set_xticks(np.arange(1, len(net.perf_train[epi_start:])+1))
+	ax.xaxis.set_ticks_position('bottom')
+	ax.yaxis.set_ticks_position('left')
+	ax.set_xlabel('training episodes', fontsize=18)
+	ax.set_ylabel('trainig error (%)', fontsize=18)
+	plt.tight_layout()
+
+	return fig
 
 def save(net, overwrite=False, plots={}):
 	""" 
