@@ -28,7 +28,8 @@ net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, 
 							conv_map_num 		= 20,
 							conv_filter_side	= 5,
 							feedf_neuron_num	= 49,
-							explore				= 'feedf'
+							explore				= 'feedf',
+							init_file 			= 'output/conv_pre_trained/Network'
 							)
 
 """ load and pre-process training and testing images """
@@ -38,12 +39,6 @@ images_train, labels_train, images_test, labels_test = helper.load_images(	class
 																			pad_size 		= (net.conv_filter_side-1)/2,
 																			load_test 		= True
 																			)
-
-""" initialize weights of network """
-net.init_weights(	images_side 	= np.size(images_train, 2), 
-					n_classes		= len(np.unique(labels_train)),
-					init_file 		= 'output/conv_pre_trained/Network'
-					)
 
 """ train network """
 perf_train = net.train(images_train, labels_train)

@@ -17,7 +17,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, dopa_conv, dopa_feedf, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf'):
+	def __init__(self, dopa_conv, dopa_feedf, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', init_file=None):
 		""" 
 		Sets network parameters 
 
@@ -36,6 +36,7 @@ class Network:
 				conv_filter_side (int, optional): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2). Default: 5
 				feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 				explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
+				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' or 'None' for random initialization. Default: None
 		"""
 		self.dopa_conv 			= dopa_conv
 		self.dopa_feedf 		= dopa_feedf
@@ -52,30 +53,9 @@ class Network:
 		self.conv_filter_side 	= conv_filter_side
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
+		self.init_file 			= init_file
 		self.perf_train 		= np.zeros(self.n_epi_tot)
 		self.perf_test 			= 0.
-
-	def init_weights(self, images_side, n_classes, init_file=None):
-		""" 
-		Initializes weights of the network, either randomly or by loading weights from init_file 
-
-			Args:
-				images_side (int): side of the input images in pixels (total pixel number in image if images_side^2).
-				n_classes (int): number of classes in the dataset. Used to set the number of neurons in the classificaion layer.
-				init_file (str, optional): path to Network object to load saved weights from. Leave empty for random weigth initialization. Default: None
-		"""
-		self.images_side 		= images_side
-		self.class_neuron_num 	= n_classes
-		self.init_file			= init_file
-		self.conv_neuron_num 	= (images_side - self.conv_filter_side + 1)**2
-		self.conv_map_side 		= int(np.sqrt(self.conv_neuron_num))
-		self.subs_map_side 		= self.conv_map_side/2
-		self.CM 				= np.zeros((n_classes, n_classes))
-
-		if self.init_file != '' and self.init_file != None:
-			self._init_weights_file()
-		else:
-			self._init_weights_random()
 
 	def train(self, images, labels):
 		""" 
@@ -90,7 +70,9 @@ class Network:
 		"""
 
 		print "\ntraining network..."
-		classes = np.sort(np.unique(labels))
+		self.classes = np.sort(np.unique(labels))
+		self.images_side = np.size(images, 2)
+		self._init_weights()
 		n_images = images.shape[0]
 		correct = 0.
 
@@ -111,7 +93,7 @@ class Network:
 
 				#compute reward prediction, reward delivery and dopamine release
 				reward_pred = hp.reward_prediction(np.argmax(class_activ), np.argmax(class_activ_noise))
-				reward = hp.reward_delivery(rnd_labels[i], classes[np.argmax(class_activ_noise)])
+				reward = hp.reward_delivery(rnd_labels[i], self.classes[np.argmax(class_activ_noise)])
 				dopa_release = hp.dopa_release(reward_pred, reward)
 					
 				# update weights...
@@ -130,8 +112,8 @@ class Network:
 				self.class_W = self._learning_step(feedf_activ, class_activ, self.class_W, dopa=dopa_release_class)
 
 				dopa_save = np.append(dopa_save, dopa_release)
-				correct += float(classes[np.argmax(class_activ)] == rnd_labels[i])
-				last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==classes)] += 1
+				correct += float(self.classes[np.argmax(class_activ)] == rnd_labels[i])
+				last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==self.classes)] += 1
 
 			self.perf_train[e] = correct
 			correct_class_W = np.sum(np.argmax(last_neuron_class,1)==np.argmax(self.class_W,1))
@@ -153,7 +135,6 @@ class Network:
 		"""
 
 		print "\ntesting network..."
-		classes = np.sort(np.unique(labels))
 		n_images = images.shape[0]
 
 		classResults = np.zeros(len(labels))
@@ -161,18 +142,31 @@ class Network:
 		pbar_epi = progressbar.ProgressBar()
 		for i in pbar_epi(range(images.shape[0])):
 			class_output = self._propagate(images[i,:,:])[0]
-			if classes[class_output] == labels[i]: self.perf_test += 1.
-			classResults[i] = classes[class_output]
+			if self.classes[class_output] == labels[i]: self.perf_test += 1.
+			classResults[i] = self.classes[class_output]
 		print "test error: %.2F%%" % ((1. - self.perf_test/images.shape[0]) * 100)
 
-		for ilabel,label in enumerate(classes):
-			for iclassif, classif in enumerate(classes):
+		for ilabel,label in enumerate(self.classes):
+			for iclassif, classif in enumerate(self.classes):
 				classifiedAs = np.sum(np.logical_and(labels==label, classResults==classif))
 				overTot = np.sum(labels==label)
 				self.CM[ilabel, iclassif] = float(classifiedAs)/overTot
 
 		return (1. - self.perf_test/n_images)
 
+	def _init_weights(self):
+		"""	Initializes weights of the network, either randomly or by loading weights from init_file """
+		
+		self.class_neuron_num 	= len(self.classes)
+		self.conv_neuron_num 	= (self.images_side - self.conv_filter_side + 1)**2
+		self.conv_map_side 		= int(np.sqrt(self.conv_neuron_num))
+		self.subs_map_side 		= self.conv_map_side/2
+		self.CM 				= np.zeros((self.class_neuron_num, self.class_neuron_num))
+
+		if self.init_file != '' and self.init_file != None:
+			self._init_weights_file()
+		else:
+			self._init_weights_random()
 
 	def _init_weights_random(self):
 		""" initialize weights of the network randomly or by loading saved weights from file """
