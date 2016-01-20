@@ -5,6 +5,10 @@ Date: 26/05/2015
 This code creates a hebbian convolutional neural network object and trains it on the MNIST dataset. The network consists of four layers: a convolutional layer, a subsampling layer, a feedforward layer and a classification layer. Only three of these layers have modifiable weights: the convolution, feedforward and classification layers. The learning rule is a hebbian learning rule augmented with a learning mechanism inspired from dopamine signalling in animal cortex.
 """
 
+import os
+import matplotlib
+if 'Documents' in os.getcwd():
+	matplotlib.use('Agg') #to avoid sending plots to screen when working on the servers
 import numpy as np
 import helper
 import hebbian_cnn
