@@ -413,7 +413,7 @@ def print_CM(perf, CM, classes):
 def generate_plots(net):
 	""" Generate network plots """
 	
-	print "\nplotting weights..."
+	print "\ngenerating plots..."
 
 	all_plots = {}
 	
@@ -446,7 +446,7 @@ def plot_conv_filter(net):
 def plot_feedf(net):
 	""" Plots feedforward weights """
 	n_rows = int(np.sqrt(net.feedf_neuron_num))
-	n_cols = net.feedf_neuron_num/n_rows
+	n_cols = int(np.ceil(float(net.feedf_neuron_num)/n_rows))
 	fig, ax = plt.subplots(n_rows, n_cols, figsize=(n_cols,n_rows))
 	grid_cols, grid_rows = np.meshgrid(np.arange(n_rows), np.arange(n_cols))
 	grid_cols = np.hstack(grid_cols)
@@ -456,6 +456,7 @@ def plot_feedf(net):
 		W = np.reshape(net.feedf_W[:,n], (net.subs_map_side, net.subs_map_side, net.conv_map_num))
 		recon_sum = reconstruct(net, W, display_all=False)
 		ax[grid_cols[n], grid_rows[n]].imshow(recon_sum, interpolation='nearest', cmap='Greys')
+	for n in range(n_rows*n_cols):
 		ax[grid_cols[n], grid_rows[n]].set_xticks([])
 		ax[grid_cols[n], grid_rows[n]].set_yticks([])
 	fig.patch.set_facecolor('white')
@@ -629,7 +630,7 @@ def print_params(net, save_path):
 	param_file.write(time_line)
 
 	for k in sorted(vars(net).keys()):
-		if k!='conv_W' and k!= 'feedf_W' and k!='class_W':
+		if k!='conv_W' and k!= 'feedf_W' and k!='class_W' and k!='CM' and k!='perf_train':
 			line = ('%s \t: %s\n' %( k, str(vars(net)[k]) )).expandtabs(tab_length)
 			param_file.write(line)
 	param_file.close()

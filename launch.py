@@ -22,7 +22,7 @@ np.random.seed(951)
 net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, '+e-r':-1.8},
 							dopa_feedf			= {'-e+r':4.5, '+e+r':0.02, '-e-r':-0.01, '+e-r':-2.0},
 							dopa_class			= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2},
-							name 				= 'long',
+							name 				= 'long_noExplr',
 							n_epi_crit 			= 30,
 							n_epi_dopa 			= 30,
 							A 					= 900.,
@@ -32,7 +32,7 @@ net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, 
 							conv_map_num 		= 20,
 							conv_filter_side	= 5,
 							feedf_neuron_num	= 150,
-							explore				= 'feedf',
+							explore				= 'none',
 							init_file 			= None
 							)
 
