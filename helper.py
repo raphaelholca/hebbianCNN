@@ -8,6 +8,7 @@ Helper functions for the convolutional hebbian network.
 import numpy as np
 import pickle
 import time
+import datetime
 import os
 import struct
 import numba
@@ -15,6 +16,14 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.cm as cm
 from array import array
+
+def check_values(net):
+	""" check if the values given as input to the Network are valid; raises an error if not """
+
+	if net.explore not in ['none', 'conv', 'feedf']:
+		raise ValueError ('Invalid explore parameter: %s ; should be one of: \'none\', \'conv\', \'feedf\'') %net.explore
+	if net.classifier not in ['neural_dopa', 'neural_prob']:
+		raise ValueError ('Invalid classifier parameter: %s ; should be one of: \'neural_dopa\', \'neural_prob\'') %net.classifier
 
 def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True):
 	""" load images training and testing images """
@@ -29,6 +38,7 @@ def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True
 	if load_test:
 		dataset_test = 'test' if dataset_train=='train' else 'train'
 		images_test, labels_test = load_preprocess_mnist(classes, dataset_test, dataset_path, pad_size)
+		images_train, labels_train, images_test, labels_test = shuffle_datasets(images_train, labels_train, images_test, labels_test)
 	else:
 		images_test, labels_test = np.copy(images_train), np.copy(labels_train)
 
@@ -109,6 +119,27 @@ def add_padding(images, pad_size, pad_value=0.):
 
 	images_padded[:, pad_size:sqrt_pixels+pad_size, pad_size:sqrt_pixels+pad_size] = images
 	return images_padded
+
+def shuffle_datasets(images_train, labels_train, images_test, labels_test):
+	""" shuffle test and train datasets """
+
+	#concatenate images and labels
+	images_conca = np.concatenate((images_train, images_test), axis=0)
+	labels_conca = np.concatenate((labels_train, labels_test), axis=0)
+
+	#shuffle images and labels
+	idx_shuffle = np.arange(len(labels_conca))
+	np.random.shuffle(idx_shuffle)
+	images_conca = images_conca[idx_shuffle,:]
+	labels_conca = labels_conca[idx_shuffle]
+
+	#split concatenated images and labels into train and test datasets
+	split_idx = len(labels_train)
+	images_train, images_test = images_conca[:split_idx,:], images_conca[split_idx:,:]
+	labels_train, labels_test = labels_conca[:split_idx], labels_conca[split_idx:]
+
+	return images_train, labels_train, images_test, labels_test
+
 
 def shuffle_images(images, labels):
 	""" Shuffles images and labels """
@@ -556,7 +587,7 @@ def plot_perf_progress(net, epi_start=0):
 	plt.gca().set_color_cycle(cm.Paired(i) for i in np.linspace(0,0.9,10))
 
 	X = np.arange( len(net.perf_train[epi_start:]) )+1
-	ax.plot(X, net.perf_train[epi_start:]*100, lw=3)
+	ax.plot(X, net.perf_train[epi_start:]*100, lw=3, marker='o')
 
 	fig.patch.set_facecolor('white')
 	ax.spines['right'].set_visible(False)
@@ -579,11 +610,14 @@ def save(net, overwrite=False, plots={}):
 			net (Network object): Network object to save to disk
 			overwrite (bool, optional): whether to overwrite file if it already exists
 			plots (dict, optional): dictionary of all plots to be saved
+
+		returns:
+			save_name (str): name of the folder where Network is saved
 	"""
 	
 	print "\nsaving network..."
 
-	save_path = check_save_file(net.name, overwrite)
+	save_path, save_name = check_save_file(net.name, overwrite)
 	os.makedirs(save_path)
 	
 	save_file = open(os.path.join(save_path, 'Network'), 'w')
@@ -595,6 +629,8 @@ def save(net, overwrite=False, plots={}):
 	for plot in plots.keys():
 		plots[plot].savefig(os.path.join(save_path, plot))
 		plt.close(plots[plot])
+
+	return save_name
 
 def check_save_file(name, overwrite):
 	"""
@@ -612,11 +648,11 @@ def check_save_file(name, overwrite):
 	if not os.path.isdir(save_path) or overwrite==True:
 		return save_path
 	else:
-		postfix = 1
+		postfix = 0
 		while os.path.isdir(save_path):
-			save_path = os.path.join('output', name + '_' + str(postfix))
 			postfix += 1
-		return save_path
+			save_path = os.path.join('output', name + '_' + str(postfix))
+		return save_path, name + '_' + str(postfix)
 
 def print_params(net, save_path):
 	""" Print parameters of Network object to human-readable file """
@@ -627,6 +663,10 @@ def print_params(net, save_path):
 	time_str = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 	time_line = ('created on\t: %s\n\n' % time_str).expandtabs(tab_length)
 	param_file.write(time_line)
+
+	runtime_str = str(datetime.timedelta(seconds=net.runtime))
+	runtime_line = ('runtime\t: %s\n\n' % runtime_str).expandtabs(tab_length)
+	param_file.write(runtime_line)
 
 	for k in sorted(vars(net).keys()):
 		if k!='conv_W' and k!= 'feedf_W' and k!='class_W':

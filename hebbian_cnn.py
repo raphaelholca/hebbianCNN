@@ -11,13 +11,14 @@ import matplotlib.pyplot as plt
 import progressbar
 import pickle
 import os
+import time
 
 hp = reload(hp)
 
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, dopa_conv, dopa_feedf, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', init_file=None):
+	def __init__(self, dopa_conv, dopa_feedf, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', classifier='neural_prob', init_file=None, seed=None):
 		""" 
 		Sets network parameters 
 
@@ -36,7 +37,9 @@ class Network:
 				conv_filter_side (int, optional): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2). Default: 5
 				feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 				explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
+				classifier (str, optional): which classifier to use as the output layer. Valid values: 'neural_dopa' (hebbian + dopa), 'neural_prob' (poisson mixture model). Default: 'neural_prob'
 				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' or 'None' for random initialization. Default: None
+				seed (int, optional): seed of the random number generator. Default: None
 		"""
 		self.dopa_conv 			= dopa_conv
 		self.dopa_feedf 		= dopa_feedf
@@ -53,9 +56,15 @@ class Network:
 		self.conv_filter_side 	= conv_filter_side
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
+		self.classifier 		= classifier
 		self.init_file 			= init_file
+		self.seed 				= seed
 		self.perf_train 		= np.zeros(self.n_epi_tot)
 		self.perf_test 			= 0.
+		
+		np.random.seed(self.seed)
+
+		hp.check_values(self)
 
 	def train(self, images, labels):
 		""" 
@@ -70,17 +79,20 @@ class Network:
 		"""
 
 		print "\ntraining network..."
+		self._train_start = time.time()
 		self.classes = np.sort(np.unique(labels))
 		self.images_side = np.size(images, 2)
 		self._init_weights()
-		n_images = images.shape[0]
+		self.n_images = images.shape[0]
+		self._feedf_activ_all = np.zeros((self.n_images, self.feedf_neuron_num))*np.nan
+		self._labels_all = np.zeros((self.n_images))*np.nan
 		correct = 0.
 
 		for e in range(self.n_epi_tot):
 			print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
 			
 			rnd_images, rnd_labels = hp.shuffle_images(images, labels)
-			last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
+			self.last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
 			dopa_save = np.array([])
 			correct = 0.
 
@@ -89,7 +101,7 @@ class Network:
 				explore_epi=np.copy(self.explore) if e>=self.n_epi_crit else 'none'
 				
 				#propagate image through the network
-				classif, conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ_noise = self._propagate(rnd_images[i,:,:], explore=explore_epi)
+				classif, conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ_noise = self._propagate(rnd_images[i,:,:], explore=explore_epi, label=rnd_labels[i])
 
 				#compute reward prediction, reward delivery and dopamine release
 				reward_pred = hp.reward_prediction(np.argmax(class_activ), np.argmax(class_activ_noise))
@@ -107,20 +119,26 @@ class Network:
 				dopa_release_feedf = hp.dopa_value(dopa_release, self.dopa_feedf) if explore_epi=='feedf' else None
 				self.feedf_W = self._learning_step(subs_activ, feedf_activ, self.feedf_W, dopa=dopa_release_feedf)
 
-				#...of the classification layer	
-				dopa_release_class = hp.dopa_value(dopa_release, self.dopa_class)
-				self.class_W = self._learning_step(feedf_activ, class_activ, self.class_W, dopa=dopa_release_class)
+				#...of the classification layer
+				if self.classifier == 'neural_dopa':
+					dopa_release_class = hp.dopa_value(dopa_release, self.dopa_class)
+					self.class_W = self._learning_step(feedf_activ, class_activ, self.class_W, dopa=dopa_release_class)
+				elif self.classifier == 'neural_prob':
+					if i%100==0: self._learn_out_proba()
 
 				dopa_save = np.append(dopa_save, dopa_release)
 				correct += float(self.classes[np.argmax(class_activ)] == rnd_labels[i])
-				last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==self.classes)] += 1
+				self.last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==self.classes)] += 1
 
-			self.perf_train[e] = 1. - correct/rnd_images.shape[0]
-			correct_class_W = np.sum(np.argmax(last_neuron_class,1)==np.argmax(self.class_W,1))
-			print "train error: %.2F%%" % (self.perf_train[e] * 100)
+			self.perf_train[e] = correct/rnd_images.shape[0]
+			correct_class_W = np.sum(np.argmax(self.last_neuron_class,1)==np.argmax(self.class_W,1))
+			print "train performance: %.2F%%" % (self.perf_train[e] * 100)
 			print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
 
-		return (1. - correct/n_images)
+		self._train_stop = time.time()
+		self.runtime = self._train_stop - self._train_start
+
+		return (correct/self.n_images)
 
 	def test(self, images, labels):
 		""" 
@@ -135,21 +153,18 @@ class Network:
 		"""
 
 		print "\ntesting network..."
-		n_images = images.shape[0]
 
-		classResults = np.zeros(len(labels))
+		class_results = np.zeros(len(labels))
 		self.perf_test = 0.
 		pbar_epi = progressbar.ProgressBar()
 		for i in pbar_epi(range(images.shape[0])):
-			class_output = self._propagate(images[i,:,:])[0]
-			if self.classes[class_output] == labels[i]: self.perf_test += 1.
-			classResults[i] = self.classes[class_output]
-		self.perf_test = (1. - self.perf_test/n_images)
-		# print "test error: %.2F%%" % ((1. - self.perf_test/images.shape[0]) * 100)
+			class_results[i] = self.classes[self._propagate(images[i,:,:])[0]]
+			
+		self.perf_test = float(np.sum(class_results==labels))/len(labels)
 
 		for ilabel,label in enumerate(self.classes):
 			for iclassif, classif in enumerate(self.classes):
-				classifiedAs = np.sum(np.logical_and(labels==label, classResults==classif))
+				classifiedAs = np.sum(np.logical_and(labels==label, class_results==classif))
 				overTot = np.sum(labels==label)
 				self.CM[ilabel, iclassif] = float(classifiedAs)/overTot
 
@@ -202,7 +217,7 @@ class Network:
 
 		del saved_net
 
-	def _propagate(self, image, explore='none', noise_distrib=0.2):
+	def _propagate(self, image, explore='none', noise_distrib=0.2, label=None):
 		""" 
 		Propagates a single image through the network and return its classification along with activation of neurons in the network. 
 
@@ -210,6 +225,7 @@ class Network:
 			images (numpy array): 2D input image to propagate
 			explore (str, optional): determines in which layer to add exploration noise; correct values are 'none', 'conv', 'feedf'
 			noise_distrib (int, optional): extend of the uniform distribution from which noise is drawn for exploration
+			label (int, optional): label of the current image
 
 		returns:
 			(int): classifcation of the network
@@ -249,12 +265,25 @@ class Network:
 			feedf_activ_noise = hp.propagate_layerwise(subs_activ_noise, self.feedf_W, SM=False)
 		if explore=='feedf' or explore=='conv':
 			feedf_activ_noise = hp.softmax(feedf_activ_noise, t=self.t)
-			class_activ_noise = hp.propagate_layerwise(feedf_activ_noise, self.class_W, SM=True, t=0.001)
+			if self.classifier == 'neural_dopa':
+				class_activ_noise = hp.propagate_layerwise(feedf_activ_noise, self.class_W, SM=True, t=0.001)
+			elif self.classifier == 'neural_prob':
+				class_activ_noise = np.dot(feedf_activ_noise, self.class_W)
 		
 		feedf_activ = hp.softmax(feedf_activ, t=self.t)
 
 		#activate classification layer
-		class_activ = hp.propagate_layerwise(feedf_activ, self.class_W, SM=True, t=0.001)
+		if self.classifier == 'neural_dopa':
+			class_activ = hp.propagate_layerwise(feedf_activ, self.class_W, SM=True, t=0.001)
+		elif self.classifier == 'neural_prob':
+			class_activ = np.dot(feedf_activ, self.class_W)
+
+		#save activation of feedforward layer for computation of output weights
+		if label is not None:
+			self._feedf_activ_all = np.roll(self._feedf_activ_all, 1, axis=0)
+			self._feedf_activ_all[0,:] = feedf_activ
+			self._labels_all = np.roll(self._labels_all, 1)
+			self._labels_all[0] = label
 
 		if explore=='none':
 			return np.argmax(class_activ), conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ
@@ -294,7 +323,17 @@ class Network:
 
 		return W
 
+	def _learn_out_proba(self):
+		""" 
+		learn output weights using using approximation of a Poisson Mixture Model 
 
+		returns:
+			nupmy array: updated weights classification weights
+		"""
+
+		for i_c, c in enumerate(self.classes):
+			self.class_W[:,i_c] = np.nanmean(self._feedf_activ_all[self._labels_all==c,:],0)
+		self.class_W = self.class_W/np.sum(self.class_W, 1)[:,np.newaxis]
 
 
 
