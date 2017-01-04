@@ -19,11 +19,17 @@ reload(helper)
 reload(hebbian_cnn)
 
 """ create hebbian convolution neural network """
-net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, '+e-r':-1.8},
-							dopa_feedf			= {'-e+r':4.5, '+e+r':0.02, '-e-r':-0.01, '+e-r':-2.0},
+net = hebbian_cnn.Network(	conv_dHigh			= 2.7,
+							conv_dMid 			= 1.8,
+							conv_dNeut 			= -0.07,
+							conv_dLow 			= -1.8,
+							feedf_dHigh			= 4.5,
+							feedf_dMid 			= 0.02,
+							feedf_dNeut 		= 0.01, 
+							feedf_dLow 			= -2.0,
 							dopa_class			= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2},
 							name 				= 'test',
-							n_epi_crit 			= 0,
+							n_epi_crit 			= 1,
 							n_epi_dopa 			= 0,
 							A 					= 900.,
 							lr 					= 0.01,
@@ -33,9 +39,10 @@ net = hebbian_cnn.Network(	dopa_conv			= {'-e+r':2.7, '+e+r':1.8, '-e-r':-0.07, 
 							conv_filter_side	= 5,
 							feedf_neuron_num	= 49,
 							explore				= 'feedf',
+							noise_explore		= 0.2,
 							classifier			= 'neural_prob',
-							init_file 			= None, #'output/pre_trained/Network'
-							seed 				= 951
+							init_file 			= '',
+							seed 				= 952
 							)
 
 """ load and pre-process training and testing images """

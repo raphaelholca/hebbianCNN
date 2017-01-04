@@ -18,13 +18,19 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, dopa_conv, dopa_feedf, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', classifier='neural_prob', init_file=None, seed=None):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', noise_explore=0.2, classifier='neural_prob', init_file=None, seed=None):
 		""" 
 		Sets network parameters 
 
 			Args:
-				dopa_conv (dict): values of dopamine release in the convolutional layer
-				dopa_feedf (dict): values of dopamine release in the feedforward layer
+				conv_dHigh (float): values of dopamine release in the convolutional layer for -reward expectation, +reward delivery
+				conv_dMid (float): values of dopamine release in the convolutional layer for +reward expectation, +reward delivery
+				conv_dNeut (float): values of dopamine release in the convolutional layer for -reward expectation, -reward delivery
+				conv_dLow (float): values of dopamine release in the convolutional layer for +reward expectation, -reward delivery
+				feedf_dHigh (float): values of dopamine release in the feedforward layer for -reward expectation, +reward delivery
+				feedf_dMid (float): values of dopamine release in the feedforward layer for +reward expectation, +reward delivery
+				feedf_dNeut (float): values of dopamine release in the feedforward layer for -reward expectation, -reward delivery
+				feedf_dLow (float): values of dopamine release in the feedforward layer for +reward expectation, -reward delivery
 				dopa_class (dict): values of dopamine release in the classification layer
 				name (str, optional): name of the network, used to save network to disk. Default: 'net'
 				n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
@@ -37,12 +43,13 @@ class Network:
 				conv_filter_side (int, optional): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2). Default: 5
 				feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 				explore (str, optional): determines in which layer to perform exploration by noise addition. Valid value: 'none', 'conv', 'feedf'. Default: 'feedf'
+				noise_explore (float, optional): parameter of the standard deviation of the normal distribution from which noise is drawn for exploration. Default: 0.2
 				classifier (str, optional): which classifier to use as the output layer. Valid values: 'neural_dopa' (hebbian + dopa), 'neural_prob' (poisson mixture model). Default: 'neural_prob'
 				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' or 'None' for random initialization. Default: None
 				seed (int, optional): seed of the random number generator. Default: None
 		"""
-		self.dopa_conv 			= dopa_conv
-		self.dopa_feedf 		= dopa_feedf
+		self.dopa_conv 			= {'-e+r':conv_dHigh, '+e+r':conv_dMid, '-e-r':conv_dNeut, '+e-r':conv_dLow}
+		self.dopa_feedf 		= {'-e+r':feedf_dHigh, '+e+r':feedf_dMid, '-e-r':feedf_dNeut, '+e-r':feedf_dLow}
 		self.dopa_class 		= dopa_class
 		self.name 				= name
 		self.n_epi_crit 		= n_epi_crit
@@ -56,6 +63,7 @@ class Network:
 		self.conv_filter_side 	= conv_filter_side
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
+		self.noise_explore 		= noise_explore
 		self.classifier 		= classifier
 		self.init_file 			= init_file
 		self.seed 				= seed
@@ -92,7 +100,7 @@ class Network:
 			print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
 			
 			rnd_images, rnd_labels = hp.shuffle_images(images, labels)
-			self.last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
+			last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
 			dopa_save = np.array([])
 			correct = 0.
 
@@ -124,14 +132,14 @@ class Network:
 					dopa_release_class = hp.dopa_value(dopa_release, self.dopa_class)
 					self.class_W = self._learning_step(feedf_activ, class_activ, self.class_W, dopa=dopa_release_class)
 				elif self.classifier == 'neural_prob':
-					if i%100==0: self._learn_out_proba()
+					if i%100==0 and i!=0 : self._learn_out_proba()
 
 				dopa_save = np.append(dopa_save, dopa_release)
 				correct += float(self.classes[np.argmax(class_activ)] == rnd_labels[i])
-				self.last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==self.classes)] += 1
+				last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==self.classes)] += 1
 
 			self.perf_train[e] = correct/rnd_images.shape[0]
-			correct_class_W = np.sum(np.argmax(self.last_neuron_class,1)==np.argmax(self.class_W,1))
+			correct_class_W = np.sum(np.argmax(last_neuron_class,1)==np.argmax(self.class_W,1))
 			print "train performance: %.2F%%" % (self.perf_train[e] * 100)
 			print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
 
@@ -181,10 +189,10 @@ class Network:
 		self.subs_map_side 		= self.conv_map_side/2
 		self.CM 				= np.zeros((self.class_neuron_num, self.class_neuron_num))
 
-		if self.init_file != '' and self.init_file != None:
-			self._init_weights_file()
-		else:
+		if self.init_file == '' or self.init_file is None:
 			self._init_weights_random()
+		else:
+			self._init_weights_file()
 
 	def _init_weights_random(self):
 		""" initialize weights of the network randomly or by loading saved weights from file """
@@ -217,14 +225,13 @@ class Network:
 
 		del saved_net
 
-	def _propagate(self, image, explore='none', noise_distrib=0.2, label=None):
+	def _propagate(self, image, explore='none', label=None):
 		""" 
 		Propagates a single image through the network and return its classification along with activation of neurons in the network. 
 
 		Args:
 			images (numpy array): 2D input image to propagate
 			explore (str, optional): determines in which layer to add exploration noise; correct values are 'none', 'conv', 'feedf'
-			noise_distrib (int, optional): extend of the uniform distribution from which noise is drawn for exploration
 			label (int, optional): label of the current image
 
 		returns:
@@ -246,7 +253,7 @@ class Network:
 		#activate convolutional feature maps
 		conv_activ = hp.propagate_layerwise(conv_input, self.conv_W, SM=False)
 		if explore=='conv':
-			conv_activ_noise = conv_activ + np.random.normal(0, np.std(feedf_activ)*noise_distrib, np.shape(feedf_activ))
+			conv_activ_noise = conv_activ + np.random.normal(0, np.std(feedf_activ)*self.noise_explore, np.shape(feedf_activ))
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
@@ -260,7 +267,7 @@ class Network:
 
 		#add exploration
 		if explore=='feedf':
-			feedf_activ_noise = feedf_activ + np.random.normal(0, np.std(feedf_activ)*noise_distrib, np.shape(feedf_activ))
+			feedf_activ_noise = feedf_activ + np.random.normal(0, np.std(feedf_activ)*self.noise_explore, np.shape(feedf_activ))
 		elif explore=='conv':
 			feedf_activ_noise = hp.propagate_layerwise(subs_activ_noise, self.feedf_W, SM=False)
 		if explore=='feedf' or explore=='conv':
@@ -333,7 +340,7 @@ class Network:
 
 		for i_c, c in enumerate(self.classes):
 			self.class_W[:,i_c] = np.nanmean(self._feedf_activ_all[self._labels_all==c,:],0)
-		self.class_W = self.class_W/np.sum(self.class_W, 1)[:,np.newaxis]
+		self.class_W = self.class_W/np.nansum(self.class_W, 1)[:,np.newaxis]
 
 
 

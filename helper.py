@@ -646,7 +646,7 @@ def check_save_file(name, overwrite):
 
 	save_path = os.path.join('output', name)
 	if not os.path.isdir(save_path) or overwrite==True:
-		return save_path
+		return save_path, name
 	else:
 		postfix = 0
 		while os.path.isdir(save_path):
