@@ -41,7 +41,7 @@ net = hebbian_cnn.Network(	conv_dHigh			= 2.7,
 							noise_explore		= 0.2,
 							classifier			= 'neural_prob',
 							init_file 			= '',
-							seed 				= 952
+							seed 				= 956
 							)
 
 """ load and pre-process training and testing images """
