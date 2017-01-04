@@ -18,7 +18,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, dopa_class, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', noise_explore=0.2, classifier='neural_prob', init_file=None, seed=None):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', noise_explore=0.2, classifier='neural_prob', init_file=None, seed=None, pypet=False, pypet_name=''):
 		""" 
 		Sets network parameters 
 
@@ -31,7 +31,6 @@ class Network:
 				feedf_dMid (float): values of dopamine release in the feedforward layer for +reward expectation, +reward delivery
 				feedf_dNeut (float): values of dopamine release in the feedforward layer for -reward expectation, -reward delivery
 				feedf_dLow (float): values of dopamine release in the feedforward layer for +reward expectation, -reward delivery
-				dopa_class (dict): values of dopamine release in the classification layer
 				name (str, optional): name of the network, used to save network to disk. Default: 'net'
 				n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
 				n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
@@ -47,10 +46,12 @@ class Network:
 				classifier (str, optional): which classifier to use as the output layer. Valid values: 'neural_dopa' (hebbian + dopa), 'neural_prob' (poisson mixture model). Default: 'neural_prob'
 				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' or 'None' for random initialization. Default: None
 				seed (int, optional): seed of the random number generator. Default: None
+				pypet (bool, optional): whether the network simulation is part of pypet exploration. Default: False
+				pypet_name (str, optional): name of the directory in which data is saved when doing pypet exploration. Default: ''
 		"""
 		self.dopa_conv 			= {'-e+r':conv_dHigh, '+e+r':conv_dMid, '-e-r':conv_dNeut, '+e-r':conv_dLow}
 		self.dopa_feedf 		= {'-e+r':feedf_dHigh, '+e+r':feedf_dMid, '-e-r':feedf_dNeut, '+e-r':feedf_dLow}
-		self.dopa_class 		= dopa_class
+		self.dopa_class 		= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2}
 		self.name 				= name
 		self.n_epi_crit 		= n_epi_crit
 		self.n_epi_dopa 		= n_epi_dopa
@@ -69,6 +70,8 @@ class Network:
 		self.seed 				= seed
 		self.perf_train 		= np.zeros(self.n_epi_tot)
 		self.perf_test 			= 0.
+		self.pypet 				= pypet
+		self.pypet_name 		= pypet_name if pypet_name != '' else name
 		
 		np.random.seed(self.seed)
 
@@ -104,8 +107,8 @@ class Network:
 			dopa_save = np.array([])
 			correct = 0.
 
-			pbar_epi = progressbar.ProgressBar()
-			for i in pbar_epi(range(rnd_images.shape[0])):
+			loop_images = progressbar.ProgressBar()(range(rnd_images.shape[0])) if not self.pypet else range(rnd_images.shape[0])
+			for i in loop_images:
 				explore_epi=np.copy(self.explore) if e>=self.n_epi_crit else 'none'
 				
 				#propagate image through the network

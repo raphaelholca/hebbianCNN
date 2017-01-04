@@ -326,12 +326,12 @@ def softmax_numba(activ, activ_SM, t=1.):
 
 	return activ_SM
 
-def propagate_layerwise(input, W, SM=True, t=1.):
+def propagate_layerwise(input_vec, W, SM=True, t=1.):
 	"""
 	One propagation step
 
 	Args:
-		input (numpy array): input vector to the neurons of layer 1
+		input_vec (numpy array): input vector to the neurons of layer 1
 		W (numpy matrix): weight matrix; shape: (input neurons x hidden neurons)
 		SM (bool, optional): whether to pass the activation throught the Softmax function
 		t (float): temperature parameter for the softmax function (only passed to the function, not used here)
@@ -340,7 +340,8 @@ def propagate_layerwise(input, W, SM=True, t=1.):
 		numpy array: the activation of the output neurons
 	"""
 
-	output = np.dot(input, np.log(W))
+	# output = np.einsum('ij,jk', input_vec, np.log(W))
+	output = np.dot(input_vec, np.log(W))
 	if SM: output = softmax(output, t=t)
 	return output
 
@@ -654,7 +655,7 @@ def check_save_file(name, overwrite):
 			save_path = os.path.join('output', name + '_' + str(postfix))
 		return save_path, name + '_' + str(postfix)
 
-def print_params(net, save_path):
+def print_params(net, save_path, runtime=None):
 	""" Print parameters of Network object to human-readable file """
 
 	tab_length = 25
@@ -664,13 +665,17 @@ def print_params(net, save_path):
 	time_line = ('created on\t: %s\n\n' % time_str).expandtabs(tab_length)
 	param_file.write(time_line)
 
-	runtime_str = str(datetime.timedelta(seconds=net.runtime))
+	rt = net.runtime if runtime is None else runtime
+
+	runtime_str = str(datetime.timedelta(seconds=rt))
 	runtime_line = ('runtime\t: %s\n\n' % runtime_str).expandtabs(tab_length)
 	param_file.write(runtime_line)
 
-	for k in sorted(vars(net).keys()):
-		if k!='conv_W' and k!= 'feedf_W' and k!='class_W':
-			line = ('%s \t: %s\n' %( k, str(vars(net)[k]) )).expandtabs(tab_length)
+	params = vars(net) if type(net) is not dict else net
+
+	for k in sorted(params.keys()):
+		if k not in ['conv_W', 'feedf_W', 'class_W', 'CM'] and k[0]!='_':
+			line = ('%s \t: %s\n' %( k, str(params[k]) )).expandtabs(tab_length)
 			param_file.write(line)
 	param_file.close()
 
