@@ -28,8 +28,8 @@ net = hebbian_cnn.Network(	conv_dHigh			= 2.7,
 							feedf_dNeut 		= 0.01, 
 							feedf_dLow 			= -2.0,
 							name 				= 'test_dot',
-							n_epi_crit 			= 0,
-							n_epi_dopa 			= 1,
+							n_epi_crit 			= 1,
+							n_epi_dopa 			= 0,
 							A 					= 900.,
 							lr 					= 0.01,
 							t 					= 0.01,
@@ -41,7 +41,7 @@ net = hebbian_cnn.Network(	conv_dHigh			= 2.7,
 							noise_explore		= 0.2,
 							classifier			= 'neural_prob',
 							init_file 			= '',
-							seed 				= 956
+							seed 				= 952
 							)
 
 """ load and pre-process training and testing images """

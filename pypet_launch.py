@@ -32,20 +32,20 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_test',
+					'name' 					: 'pypet_feedf_greedy',
 					'n_epi_crit' 			: 0,
-					'n_epi_dopa' 			: 1,
+					'n_epi_dopa' 			: 10,
 					'A' 					: 900.,
-					'lr' 					: 0.01,
-					't' 					: 1.0,
+					'lr'					: 0.01,
+					't' 					: 0.01,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
 					'conv_filter_side'		: 5,
 					'feedf_neuron_num'		: 49,
 					'explore'				: 'feedf',
-					'noise_explore'			: 0.2,
+					'noise_explore'			: 0.0,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: 'output/pre_trained/Network',
+					'init_file' 			: 'output/pre_trained_all_classes/Network',
 					'seed' 					: 952
 					}
 
@@ -60,14 +60,14 @@ explore_dict = {
 					# 'feedf_dHigh'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
 					# 'feedf_dNeut'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
 
-					# 'feedf_dMid'			: [+0.80, +0.90, +1.00, +1.10, +1.20],
-					# 'feedf_dLow'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
+					'feedf_dMid'			: [+0.00, +0.10, +0.20, +0.50, +1.00],
+					'feedf_dLow'			: [-4.00, -3.00, -2.00, -1.00, -0.00],
 				}
 
 """ load and pre-process images """
 images_train, labels_train, images_test, labels_test = helper.load_images(	
-																			# classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
-																			classes 		= np.array([4, 7, 9], dtype=int),
+																			classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
+																			# classes 		= np.array([4, 7, 9], dtype=int),
 																			dataset_train	= 'test',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (parameter_dict['conv_filter_side']-1)/2,
@@ -87,7 +87,7 @@ env = pypet.Environment(trajectory 		= 'explore_perf',
 						log_stdout		= False,
 						add_time 		= False,
 						multiproc 		= True,
-						ncores 			= 4,
+						ncores 			= 10,
 						filename		=  os.path.join(save_path, 'explore_perf.hdf5'))
 
 
@@ -109,7 +109,7 @@ helper.print_params(print_dict, save_path, runtime=toc-tic)
 
 """ plot results """
 name_best = pp.plot_results(folder_path=save_path)
-len(explore_dict.keys())==5: pp.faceting(save_path)
+if len(explore_dict.keys())==5: pp.faceting(save_path)
 
 print '\nrun name:\t' + parameter_dict['name']
 print 'start time:\t' + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(tic))
