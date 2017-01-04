@@ -340,8 +340,8 @@ def propagate_layerwise(input_vec, W, SM=True, t=1.):
 		numpy array: the activation of the output neurons
 	"""
 
-	# output = np.einsum('ij,jk', input_vec, np.log(W))
-	output = np.dot(input_vec, np.log(W))
+	output = np.einsum('ij,jk', input_vec, np.log(W))
+	# output = np.dot(input_vec, np.log(W))
 	if SM: output = softmax(output, t=t)
 	return output
 
