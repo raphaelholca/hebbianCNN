@@ -66,7 +66,7 @@ class Network:
 		self.conv_filter_side 	= conv_filter_side
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
-		self.noise_explore 		= noise_explore
+		self.noise_explore 		= np.clip(noise_explore, 1e-20, np.inf)
 		self.classifier 		= classifier
 		self.init_file 			= init_file
 		self.seed 				= seed
@@ -109,7 +109,7 @@ class Network:
 			dopa_save = np.array([])
 			correct = 0.
 
-			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if not self.pypet else range(rnd_images.shape[0])
+			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if ((not self.pypet) or True) else range(rnd_images.shape[0])
 			for i in loop_train:
 				explore_epi=np.copy(self.explore) if e>=self.n_epi_crit else 'none'
 				

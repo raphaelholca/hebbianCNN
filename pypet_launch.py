@@ -24,17 +24,17 @@ reload(helper)
 pp = reload(pp)
 
 """ static parameters """
-parameter_dict = {	'conv_dHigh'			: 2.7,
-					'conv_dMid' 			: 1.8,
-					'conv_dNeut' 			: -0.07,
-					'conv_dLow' 			: -1.8,
+parameter_dict = {	'conv_dHigh'			: 0.0,#2.7,
+					'conv_dMid' 			: 0.0,#1.8,
+					'conv_dNeut' 			: 0.0,#-0.07,
+					'conv_dLow' 			: 0.0,#-1.8,
 					'feedf_dHigh'			: 4.5,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_test',
+					'name' 					: 'pypet_feedf_greedy',
 					'n_epi_crit' 			: 0,
-					'n_epi_dopa' 			: 1,
+					'n_epi_dopa' 			: 10,
 					'A' 					: 900.,
 					'lr_conv' 				: 0.01,
 					'lr_feedf' 				: 0.01,
@@ -44,9 +44,9 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'conv_filter_side'		: 5,
 					'feedf_neuron_num'		: 49,
 					'explore'				: 'feedf',
-					'noise_explore'			: 0.2,
+					'noise_explore'			: 0.0,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: 'output/pre_trained/Network',
+					'init_file' 			: 'output/pre_trained_all_classes/Network',
 					'seed' 					: 952
 					}
 
@@ -61,18 +61,18 @@ explore_dict = {
 					# 'feedf_dHigh'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
 					# 'feedf_dNeut'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
 
-					# 'feedf_dMid'			: [+0.80, +0.90, +1.00, +1.10, +1.20],
-					# 'feedf_dLow'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
+					'feedf_dMid'			: [+0.00, +0.10, +0.20, +0.50, +1.00],
+					'feedf_dLow'			: [-4.00, -3.00, -2.00, -1.00, -0.00],
 				}
 
 """ load and pre-process images """
 images_train, labels_train, images_test, labels_test = helper.load_images(	
-																			# classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
-																			classes 		= np.array([4, 7, 9], dtype=int),
-																			dataset_train	= 'test',
+																			classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
+																			# classes 		= np.array([4, 7, 9], dtype=int),
+																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (parameter_dict['conv_filter_side']-1)/2,
-																			load_test 		= False
+																			load_test 		= True
 																			)
 
 """ create directory to save data """
@@ -88,7 +88,7 @@ env = pypet.Environment(trajectory 		= 'explore_perf',
 						log_stdout		= False,
 						add_time 		= False,
 						multiproc 		= True,
-						ncores 			= 4,
+						ncores 			= 10,
 						filename		=  os.path.join(save_path, 'explore_perf.hdf5'))
 
 
