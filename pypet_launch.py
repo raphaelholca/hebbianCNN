@@ -24,10 +24,10 @@ reload(helper)
 pp = reload(pp)
 
 """ static parameters """
-parameter_dict = {	'conv_dHigh'			: 2.7,
-					'conv_dMid' 			: 1.8,
-					'conv_dNeut' 			: -0.07,
-					'conv_dLow' 			: -1.8,
+parameter_dict = {	'conv_dHigh'			: 0.0,#2.7,
+					'conv_dMid' 			: 0.0,#1.8,
+					'conv_dNeut' 			: 0.0,#-0.07,
+					'conv_dLow' 			: 0.0,#-1.8,
 					'feedf_dHigh'			: 4.5,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
@@ -68,10 +68,10 @@ explore_dict = {
 images_train, labels_train, images_test, labels_test = helper.load_images(	
 																			classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
 																			# classes 		= np.array([4, 7, 9], dtype=int),
-																			dataset_train	= 'test',
+																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (parameter_dict['conv_filter_side']-1)/2,
-																			load_test 		= False
+																			load_test 		= True
 																			)
 
 """ create directory to save data """

@@ -31,8 +31,6 @@ def launch_one_exploration(parameter_dict, images_train, labels_train, images_te
 
 	perf_test = net.test(images_test, labels_test)
 
-	print perf_test
-
 	p_file = open(os.path.join(save_path, 'networks', net.name), 'w')
 	pickle.dump(net, p_file)
 	p_file.close()

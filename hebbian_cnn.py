@@ -64,7 +64,7 @@ class Network:
 		self.conv_filter_side 	= conv_filter_side
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore 			= explore
-		self.noise_explore 		= noise_explore
+		self.noise_explore 		= np.clip(noise_explore, 1e-20, np.inf)
 		self.classifier 		= classifier
 		self.init_file 			= init_file
 		self.seed 				= seed
@@ -89,7 +89,7 @@ class Network:
 				(float): training performance of the network.
 		"""
 
-		print "\ntraining network..."
+		if not self.pypet: print "\ntraining network..."
 		self._train_start = time.time()
 		self.classes = np.sort(np.unique(labels))
 		self.images_side = np.size(images, 2)
@@ -100,15 +100,15 @@ class Network:
 		correct = 0.
 
 		for e in range(self.n_epi_tot):
-			print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
+			if not self.pypet: print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
 			
 			rnd_images, rnd_labels = hp.shuffle_images(images, labels)
 			last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
 			dopa_save = np.array([])
 			correct = 0.
 
-			loop_images = progressbar.ProgressBar()(range(rnd_images.shape[0])) if not self.pypet else range(rnd_images.shape[0])
-			for i in loop_images:
+			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if ((not self.pypet) or True) else range(rnd_images.shape[0])
+			for i in loop_train:
 				explore_epi=np.copy(self.explore) if e>=self.n_epi_crit else 'none'
 				
 				#propagate image through the network
@@ -143,8 +143,8 @@ class Network:
 
 			self.perf_train[e] = correct/rnd_images.shape[0]
 			correct_class_W = np.sum(np.argmax(last_neuron_class,1)==np.argmax(self.class_W,1))
-			print "train performance: %.2F%%" % (self.perf_train[e] * 100)
-			print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
+			if not self.pypet: print "train performance: %.2F%%" % (self.perf_train[e] * 100)
+			if not self.pypet: print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
 
 		self._train_stop = time.time()
 		self.runtime = self._train_stop - self._train_start
@@ -163,12 +163,13 @@ class Network:
 				(float): test performance of the network.
 		"""
 
-		print "\ntesting network..."
+		if not self.pypet: print "\ntesting network..."
 
 		class_results = np.zeros(len(labels))
 		self.perf_test = 0.
-		pbar_epi = progressbar.ProgressBar()
-		for i in pbar_epi(range(images.shape[0])):
+
+		loop_test = progressbar.ProgressBar()(range(images.shape[0])) if not self.pypet else range(images.shape[0])
+		for i in loop_test:
 			class_results[i] = self.classes[self._propagate(images[i,:,:])[0]]
 			
 		self.perf_test = float(np.sum(class_results==labels))/len(labels)
@@ -179,7 +180,7 @@ class Network:
 				overTot = np.sum(labels==label)
 				self.CM[ilabel, iclassif] = float(classifiedAs)/overTot
 
-		hp.print_CM(self.perf_test, self.CM, self.classes)
+		if not self.pypet: hp.print_CM(self.perf_test, self.CM, self.classes)
 
 		return self.perf_test
 
@@ -267,7 +268,7 @@ class Network:
 
 		#activate feedforward layer
 		feedf_activ = hp.propagate_layerwise(subs_activ, self.feedf_W, SM=False)
-
+		
 		#add exploration
 		if explore=='feedf':
 			feedf_activ_noise = feedf_activ + np.random.normal(0, np.std(feedf_activ)*self.noise_explore, np.shape(feedf_activ))
@@ -322,7 +323,8 @@ class Network:
 
 		if numba:
 			post_neurons_lr = hp.disinhibition(post_neurons, self.lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
-			dot = np.dot(pre_neurons.T, post_neurons_lr)
+			# dot = np.dot(pre_neurons.T, post_neurons_lr)
+			dot = np.einsum('ij,jk', pre_neurons.T, post_neurons_lr)
 			dW = hp.regularization(dot, post_neurons_lr, W, np.zeros(post_neurons_lr.shape[1]))
 		else:
 			post_neurons_lr = post_neurons * (self.lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
