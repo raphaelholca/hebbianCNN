@@ -24,10 +24,10 @@ reload(helper)
 pp = reload(pp)
 
 """ static parameters """
-parameter_dict = {	'conv_dHigh'			: 0.0,#2.7,
-					'conv_dMid' 			: 0.0,#1.8,
-					'conv_dNeut' 			: 0.0,#-0.07,
-					'conv_dLow' 			: 0.0,#-1.8,
+parameter_dict = {	'conv_dHigh'			: 2.7,
+					'conv_dMid' 			: 1.8,
+					'conv_dNeut' 			: -0.07,
+					'conv_dLow' 			: -1.8,
 					'feedf_dHigh'			: 4.5,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
