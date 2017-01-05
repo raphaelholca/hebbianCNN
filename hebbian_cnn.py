@@ -18,7 +18,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', noise_explore=0.2, classifier='neural_prob', init_file=None, seed=None, pypet=False, pypet_name=''):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore='feedf', noise_explore=0.2, classifier='neural_prob', init_file=None, seed=None, pypet=False, pypet_name=''):
 		""" 
 		Sets network parameters 
 
@@ -35,7 +35,8 @@ class Network:
 				n_epi_crit (int, optional): number of statistical pre-training steps (pure Hebbian). Default: 10
 				n_epi_dopa (int, optional): number of dopamine-mediated training steps. Default: 10
 				A (float, optional): parameter for the normalization of the input images (pixel values sum to A). Default: 900
-				lr (float, optional): learning rate of the network. Default: 0.01
+				lr_conv (float, optional): learning rate of the network for the convolutional layer. Default: 0.01
+				lr_feedf (float, optional): learning rate of the network for the feedforward layer. Default: 0.01
 				t (float, optional): temperature of the softmax function ('softness' of the winner-take-all). Default: 0.01
 				batch_size (int, optional): size of training batch. Default: 196
 				conv_map_num (int, optional): number of convolutional filter maps. Default: 5
@@ -57,7 +58,8 @@ class Network:
 		self.n_epi_dopa 		= n_epi_dopa
 		self.n_epi_tot 			= n_epi_crit + n_epi_dopa
 		self.A 					= A
-		self.lr 				= lr
+		self.lr_conv 			= lr_conv
+		self.lr_feedf			= lr_feedf
 		self.t 					= t
 		self.batch_size 		= batch_size
 		self.conv_map_num 		= conv_map_num
@@ -124,16 +126,16 @@ class Network:
 				bs = self.batch_size
 				for b in range(self.conv_neuron_num/bs):
 					dopa_release_conv = hp.dopa_value(dopa_release, self.dopa_conv)*np.ones(bs) if explore_epi=='conv' else None
-					self.conv_W = self._learning_step(conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, dopa=dopa_release_conv)
+					self.conv_W = self._learning_step(conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, lr=self.lr_conv, dopa=dopa_release_conv)
 
 				#...of the feedforward layer
 				dopa_release_feedf = hp.dopa_value(dopa_release, self.dopa_feedf) if explore_epi=='feedf' else None
-				self.feedf_W = self._learning_step(subs_activ, feedf_activ, self.feedf_W, dopa=dopa_release_feedf)
+				self.feedf_W = self._learning_step(subs_activ, feedf_activ, self.feedf_W, lr=self.lr_feedf, dopa=dopa_release_feedf)
 
 				#...of the classification layer
 				if self.classifier == 'neural_dopa':
 					dopa_release_class = hp.dopa_value(dopa_release, self.dopa_class)
-					self.class_W = self._learning_step(feedf_activ, class_activ, self.class_W, dopa=dopa_release_class)
+					self.class_W = self._learning_step(feedf_activ, class_activ, self.class_W, lr=0.01, dopa=dopa_release_class)
 				elif self.classifier == 'neural_prob':
 					if i%100==0 and i!=0 : self._learn_out_proba()
 
@@ -303,7 +305,7 @@ class Network:
 		elif explore=='conv':
 			return np.argmax(class_activ), conv_input, conv_activ_noise, subs_activ, feedf_activ, class_activ, class_activ_noise
 
-	def _learning_step(self, pre_neurons, post_neurons, W, dopa=None, numba=True):
+	def _learning_step(self, pre_neurons, post_neurons, W, lr, dopa=None, numba=True):
 		"""
 		One learning step for the hebbian network; computes changes in weight, adds the change to the weights and impose bound on weights
 
@@ -322,12 +324,12 @@ class Network:
 			dopa = np.array([dopa])
 
 		if numba:
-			post_neurons_lr = hp.disinhibition(post_neurons, self.lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
+			post_neurons_lr = hp.disinhibition(post_neurons, lr, dopa, np.zeros_like(post_neurons)) #adds the effect of dopamine to the learning rate
 			# dot = np.dot(pre_neurons.T, post_neurons_lr)
 			dot = np.einsum('ij,jk', pre_neurons.T, post_neurons_lr)
 			dW = hp.regularization(dot, post_neurons_lr, W, np.zeros(post_neurons_lr.shape[1]))
 		else:
-			post_neurons_lr = post_neurons * (self.lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
+			post_neurons_lr = post_neurons * (lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
 			dW = (np.dot(pre_neurons.T, post_neurons_lr) - np.sum(post_neurons_lr, 0)*W)
 		
 		W += dW

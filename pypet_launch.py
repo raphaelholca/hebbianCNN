@@ -36,7 +36,8 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'n_epi_crit' 			: 0,
 					'n_epi_dopa' 			: 1,
 					'A' 					: 900.,
-					'lr' 					: 0.01,
+					'lr_conv' 				: 0.01,
+					'lr_feedf' 				: 0.01,
 					't' 					: 0.01,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
@@ -109,7 +110,7 @@ helper.print_params(print_dict, save_path, runtime=toc-tic)
 
 """ plot results """
 name_best = pp.plot_results(folder_path=save_path)
-len(explore_dict.keys())==5: pp.faceting(save_path)
+if len(explore_dict.keys())==5: pp.faceting(save_path)
 
 print '\nrun name:\t' + parameter_dict['name']
 print 'start time:\t' + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(tic))
