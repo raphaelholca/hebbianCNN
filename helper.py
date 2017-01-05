@@ -675,7 +675,7 @@ def print_params(net, save_path, runtime=None):
 	params = vars(net) if type(net) is not dict else net
 
 	for k in sorted(params.keys()):
-		if k not in ['conv_W', 'feedf_W', 'class_W', 'CM'] and k[0]!='_':
+		if k not in ['conv_W', 'feedf_W', 'class_W', 'CM', 'perf_train'] and k[0]!='_':
 			line = ('%s \t: %s\n' %( k, str(params[k]) )).expandtabs(tab_length)
 			param_file.write(line)
 	param_file.close()
