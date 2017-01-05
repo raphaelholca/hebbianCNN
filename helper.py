@@ -20,8 +20,10 @@ from array import array
 def check_values(net):
 	""" check if the values given as input to the Network are valid; raises an error if not """
 
-	if net.explore not in ['none', 'conv', 'feedf']:
-		raise ValueError ('Invalid explore parameter: %s ; should be one of: \'none\', \'conv\', \'feedf\'') %net.explore
+	if net.explore_layer not in ['none', 'conv', 'feedf', 'both']:
+		raise ValueError ('Invalid explore_layer parameter: %s ; should be one of: \'none\', \'conv\', \'feedf\', \'both\'') %net.explore_layer
+	if net.dopa_layer not in ['none', 'conv', 'feedf', 'both']:
+		raise ValueError ('Invalid dopa_layer parameter: %s ; should be one of: \'none\', \'conv\', \'feedf\', \'both\'') %net.dopa_layer
 	if net.classifier not in ['neural_dopa', 'neural_prob']:
 		raise ValueError ('Invalid classifier parameter: %s ; should be one of: \'neural_dopa\', \'neural_prob\'') %net.classifier
 
@@ -675,7 +677,7 @@ def print_params(net, save_path, runtime=None):
 	params = vars(net) if type(net) is not dict else net
 
 	for k in sorted(params.keys()):
-		if k not in ['conv_W', 'feedf_W', 'class_W', 'CM'] and k[0]!='_':
+		if k not in ['conv_W', 'feedf_W', 'class_W', 'CM', 'perf_train'] and k[0]!='_':
 			line = ('%s \t: %s\n' %( k, str(params[k]) )).expandtabs(tab_length)
 			param_file.write(line)
 	param_file.close()
