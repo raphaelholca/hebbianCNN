@@ -18,7 +18,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file=None, seed=None, pypet=False, pypet_name=''):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, pypet=False, pypet_name=''):
 		""" 
 		Sets network parameters 
 
@@ -46,7 +46,7 @@ class Network:
 				dopa_layer (str, optional): in which layer to release dopamine. Valid values: 'none', 'conv', 'feedf', 'both'. Default: 'feedf'
 				noise_explore (float, optional): parameter of the standard deviation of the normal distribution from which noise is drawn for exploration. Default: 0.2
 				classifier (str, optional): which classifier to use as the output layer. Valid values: 'neural_dopa' (hebbian + dopa), 'neural_prob' (poisson mixture model). Default: 'neural_prob'
-				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' or 'None' for random initialization. Default: None
+				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' for random initialization. Default: ''
 				seed (int, optional): seed of the random number generator. Default: None
 				pypet (bool, optional): whether the network simulation is part of pypet exploration. Default: False
 				pypet_name (str, optional): name of the directory in which data is saved when doing pypet exploration. Default: ''
@@ -154,7 +154,7 @@ class Network:
 		self._train_stop = time.time()
 		self.runtime = self._train_stop - self._train_start
 
-		return (correct/self.n_images)
+		return self.perf_train
 
 	def test(self, images, labels):
 		""" 
@@ -198,7 +198,7 @@ class Network:
 		self.subs_map_side 		= self.conv_map_side/2
 		self.CM 				= np.zeros((self.class_neuron_num, self.class_neuron_num))
 
-		if self.init_file == '' or self.init_file is None:
+		if self.init_file == '':
 			self._init_weights_random()
 		else:
 			self._init_weights_file()

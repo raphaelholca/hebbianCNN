@@ -592,7 +592,7 @@ def plot_perf_progress(net, epi_start=0):
 
 	X = np.arange( len(net.perf_train[epi_start:]) )+1
 	ax.plot(X, net.perf_train[epi_start:]*100, lw=3, marker='o')
-
+	ax.scatter(len(net.perf_train.shape)+1, net.perf_test*100, lw=3, marker='x', s=50)
 	fig.patch.set_facecolor('white')
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
@@ -605,6 +605,31 @@ def plot_perf_progress(net, epi_start=0):
 	plt.tight_layout()
 
 	return fig
+
+def plot_perf_progress_multiruns(perf_train, perf_test, save_path_multiruns):
+	"""	plots the progression of the error rate over training episodes for multiple runs """
+
+	n_runs = perf_train.shape[0]
+	colors=[cm.Paired(i) for i in np.linspace(0,0.9,n_runs)]
+	fig, ax = plt.subplots()
+
+	X = np.arange(perf_train.shape[1])+1
+	for r in range(n_runs):
+		ax.plot(X, perf_train[r]*100, lw=3, marker='o', c=colors[r])
+		ax.scatter(X[-1], perf_test[r]*100, lw=3, marker='x', c=colors[r], s=50)
+
+	fig.patch.set_facecolor('white')
+	ax.spines['right'].set_visible(False)
+	ax.spines['top'].set_visible(False)
+	ax.tick_params(axis='both', which='major', direction='out', labelsize=17)
+	ax.xaxis.set_ticks_position('bottom')
+	ax.yaxis.set_ticks_position('left')
+	ax.set_xlabel('training episodes', fontsize=18)
+	ax.set_ylabel('trainig error (%)', fontsize=18)
+	plt.tight_layout()
+
+	plt.savefig(os.path.join(save_path_multiruns, 'all_perf.pdf'))
+	plt.close(fig)
 
 def save(net, overwrite=False, plots={}, save_path=None):
 	""" 
@@ -684,8 +709,42 @@ def print_params(net, save_path, runtime=None):
 			param_file.write(line)
 	param_file.close()
 
+def multiruns_init(n_runs, parameter_dict, save_path):
+	""" initialise mutliple runs """
+	
+	if n_runs >1:
+		perf_train_all = np.empty((n_runs, parameter_dict['n_epi_crit'] + parameter_dict['n_epi_dopa']))
+		perf_test_all = np.empty(n_runs)
+		save_path_multiruns, _ = check_save_file(save_path, overwrite=False)
+		os.mkdir(save_path_multiruns)
+		save_path = os.path.join(save_path_multiruns, parameter_dict['name'])
+		init_dir = parameter_dict['init_file']
+		all_init_files = next(os.walk(parameter_dict['init_file']))[1] if init_dir != '' else None
 
+		return perf_train_all, perf_test_all, save_path_multiruns, save_path, init_dir, all_init_files
+	else:
+		return None, None, None, save_path, None, None
+def multiruns_init_run(n_runs, r, images_train, labels_train, images_test, labels_test, parameter_dict, init_dir, all_init_files):
+	""" initialise mutliple runs """
+	if n_runs > 1:
+		print "\nrun: %d/%d" % (r+1, n_runs)
+		parameter_dict['seed'] += r
+		images_train, labels_train, images_test, labels_test = shuffle_datasets(images_train, labels_train, images_test, labels_test)
+		if init_dir != '': parameter_dict['init_file'] = os.path.join(init_dir, all_init_files[r])
 
+	return images_train, labels_train, images_test, labels_test, parameter_dict
+
+def mutliruns_collect(n_runs, r, perf_train, perf_test, perf_train_all, perf_test_all, save_path_multiruns):
+	""" collect results from multiple runs """
+	
+	if n_runs > 1:
+		perf_train_all[r] = perf_train
+		perf_test_all[r] = perf_test
+		if r==n_runs-1:
+			pickle.dump({'perf_train_all':perf_train_all, 'perf_test_all':perf_test_all}, open(os.path.join(save_path_multiruns, 'all_runs'), 'w'))
+			plot_perf_progress_multiruns(perf_train_all, perf_test_all, save_path_multiruns)
+
+	return perf_train_all, perf_test_all
 
 
 
