@@ -111,7 +111,7 @@ class Network:
 			dopa_save = np.array([])
 			correct = 0.
 
-			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if ((not self.pypet) or True) else range(rnd_images.shape[0])
+			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if not self.pypet else range(rnd_images.shape[0])
 			for i in loop_train:
 				explore_epi=np.copy(self.explore_layer) if e>=self.n_epi_crit else 'none'
 				dopa_layer_epi=np.copy(self.dopa_layer) if e>=self.n_epi_crit else 'none'
