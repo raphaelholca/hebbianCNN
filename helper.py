@@ -606,7 +606,7 @@ def plot_perf_progress(net, epi_start=0):
 
 	return fig
 
-def save(net, overwrite=False, plots={}):
+def save(net, overwrite=False, plots={}, save_path=None):
 	""" 
 	Saves the network object and associated plots to disk 
 
@@ -614,6 +614,7 @@ def save(net, overwrite=False, plots={}):
 			net (Network object): Network object to save to disk
 			overwrite (bool, optional): whether to overwrite file if it already exists
 			plots (dict, optional): dictionary of all plots to be saved
+			save_path: path to save Network and plots
 
 		returns:
 			save_name (str): name of the folder where Network is saved
@@ -621,7 +622,8 @@ def save(net, overwrite=False, plots={}):
 	
 	print "\nsaving network..."
 
-	save_path, save_name = check_save_file(net.name, overwrite)
+	save_path = os.path.join('output', net.name) if save_path is None else save_path
+	save_path, save_name = check_save_file(save_path, overwrite)
 	os.makedirs(save_path)
 	
 	save_file = open(os.path.join(save_path, 'Network'), 'w')
@@ -636,7 +638,7 @@ def save(net, overwrite=False, plots={}):
 
 	return save_name
 
-def check_save_file(name, overwrite):
+def check_save_file(save_path, overwrite=False):
 	"""
 	Checks whether file in which to save the network already exists. If it does exist, the file will be overwritten if overwrite==True, otherwise a postfix will be appended to the save name.
 
@@ -648,15 +650,15 @@ def check_save_file(name, overwrite):
 		save_path (str): the name of the path where to save the Network object
 	"""
 
-	save_path = os.path.join('output', name)
+	path_head, path_tail = os.path.split(save_path)
 	if not os.path.isdir(save_path) or overwrite==True:
-		return save_path, name
+		return save_path, path_tail
 	else:
 		postfix = 0
 		while os.path.isdir(save_path):
 			postfix += 1
-			save_path = os.path.join('output', name + '_' + str(postfix))
-		return save_path, name + '_' + str(postfix)
+			save_path = os.path.join(path_head, path_tail + '_' + str(postfix))
+		return save_path, path_tail + '_' + str(postfix)
 
 def print_params(net, save_path, runtime=None):
 	""" Print parameters of Network object to human-readable file """

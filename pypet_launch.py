@@ -47,7 +47,7 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'dopa_layer'			: 'conv',
 					'noise_explore'			: 0.0,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: 'output/pre_trained_all_classes/Network',
+					'init_file' 			: 'output/pre_trained_all_classes',
 					'seed' 					: 952
 					}
 

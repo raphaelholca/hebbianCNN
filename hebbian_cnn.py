@@ -97,8 +97,8 @@ class Network:
 		self._train_start = time.time()
 		self.classes = np.sort(np.unique(labels))
 		self.images_side = np.size(images, 2)
-		self._init_weights()
 		self.n_images = images.shape[0]
+		self._init_weights()
 		self._feedf_activ_all = np.zeros((self.n_images, self.feedf_neuron_num))*np.nan
 		self._labels_all = np.zeros((self.n_images))*np.nan
 		correct = 0.
@@ -221,10 +221,11 @@ class Network:
 	def _init_weights_file(self):
 		""" initialize weights of the network by loading saved weights from file """
 
-		if not os.path.exists(self.init_file):
-			raise IOError, "weight file \'%s\' not found" % self.init_file
+		init_network = os.path.join(self.init_file, 'Network')
+		if not os.path.exists(init_network):
+			raise IOError, "weight file \'%s\' not found" % init_network
 		
-		f = open(self.init_file, 'r')
+		f = open(init_network, 'r')
 		saved_net = pickle.load(f)
 		f.close()
 
