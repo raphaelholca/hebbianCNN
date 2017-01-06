@@ -24,15 +24,15 @@ reload(helper)
 pp = reload(pp)
 
 """ static parameters """
-parameter_dict = {	'conv_dHigh'			: 0.0,#2.7,
-					'conv_dMid' 			: 0.0,#1.8,
-					'conv_dNeut' 			: 0.0,#-0.07,
-					'conv_dLow' 			: 0.0,#-1.8,
+parameter_dict = {	'conv_dHigh'			: 2.7,
+					'conv_dMid' 			: 1.8,
+					'conv_dNeut' 			: -0.07,
+					'conv_dLow' 			: -1.8,
 					'feedf_dHigh'			: 4.5,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_feedf_greedy',
+					'name' 					: 'pypet_conv_greedy_2',
 					'n_epi_crit' 			: 0,
 					'n_epi_dopa' 			: 10,
 					'A' 					: 900.,
@@ -43,8 +43,8 @@ parameter_dict = {	'conv_dHigh'			: 0.0,#2.7,
 					'conv_map_num' 			: 20,
 					'conv_filter_side'		: 5,
 					'feedf_neuron_num'		: 49,
-					'explore_layer'			: 'feedf',
-					'dopa_layer'			: 'feedf',
+					'explore_layer'			: 'none',
+					'dopa_layer'			: 'conv',
 					'noise_explore'			: 0.0,
 					'classifier'			: 'neural_prob',
 					'init_file' 			: 'output/pre_trained_all_classes/Network',
@@ -62,8 +62,9 @@ explore_dict = {
 					# 'feedf_dHigh'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
 					# 'feedf_dNeut'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
 
-					'feedf_dMid'			: [+0.00, +0.10, +0.20, +0.50, +1.00],
-					'feedf_dLow'			: [-4.00, -3.00, -2.00, -1.00, -0.00],
+					'feedf_dMid'			: [+1.00],
+					'feedf_dLow'			: [-0.80, -0.60, -0.40, -0.30, -0.20, -0.10, -0.00, +0.10, +0.20, +0.40],
+					# 'feedf_dLow'			: [-4.00, -3.00, -2.00, -1.00, -0.00],
 				}
 
 """ load and pre-process images """
