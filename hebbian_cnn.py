@@ -111,7 +111,7 @@ class Network:
 			dopa_save = np.array([])
 			correct = 0.
 
-			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if ((not self.pypet) or True) else range(rnd_images.shape[0])
+			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if not self.pypet else range(rnd_images.shape[0])
 			for i in loop_train:
 				explore_epi=np.copy(self.explore_layer) if e>=self.n_epi_crit else 'none'
 				dopa_layer_epi=np.copy(self.dopa_layer) if e>=self.n_epi_crit else 'none'
@@ -262,7 +262,7 @@ class Network:
 		#activate convolutional feature maps
 		conv_activ = hp.propagate_layerwise(conv_input, self.conv_W, SM=False)
 		if explore=='conv' or explore=='both':
-			conv_activ_noise = conv_activ + np.random.normal(0, np.std(feedf_activ)*self.noise_explore, np.shape(feedf_activ))
+			conv_activ_noise = conv_activ + np.random.normal(0, np.std(conv_activ)*self.noise_explore, np.shape(conv_activ))
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
