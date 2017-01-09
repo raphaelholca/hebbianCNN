@@ -246,11 +246,21 @@ def subsampling_numba(FM, SSM, ite):
 			for jm in range(ite.shape[0]):
 				j=ite[jm]
 				select = FM[i:i+2,j:j+2,f]
+				
+				#MAX-POOLING			
+				# tmp_max=-1
+				# for k in range(2):
+				# 	for l in range(2):
+				# 		tmp_max = select[k,l] if tmp_max < select[k,l] else tmp_max
+				# SSM[im,jm,f] = tmp_max
+
+				#SUM-POOLING
 				tmp_sum=0
 				for k in range(2):
 					for l in range(2):
 						tmp_sum = tmp_sum + select[k,l]
 				SSM[im,jm,f] = tmp_sum
+	
 	return SSM
 
 @numba.njit
@@ -458,19 +468,23 @@ def generate_plots(net):
 
 	return all_plots
 
-def plot_conv_filter(net):
+def plot_conv_filter(net=None, W=None):
 	""" Plots convolutional weights """
 
-	n_rows = int(np.sqrt(net.conv_map_num))
-	n_cols = int(np.ceil(net.conv_map_num/float(n_rows)))
+	W = net.conv_W if net is not None else W
+
+	conv_map_num = int(W.shape[1])
+	conv_filter_side = int(np.sqrt(W.shape[0]))
+	n_rows = int(np.sqrt(conv_map_num))
+	n_cols = int(np.ceil(conv_map_num/float(n_rows)))
 	fig, ax = plt.subplots(n_rows, n_cols, figsize=(n_cols,n_rows))
 	grid_cols, grid_rows = np.meshgrid(np.arange(n_rows), np.arange(n_cols))
 	grid_cols = np.hstack(grid_cols)
 	grid_rows = np.hstack(grid_rows)
 
-	for f in range(net.conv_map_num):
-		conv_W_square = np.reshape(net.conv_W[:,f], (net.conv_filter_side, net.conv_filter_side))
-		ax[grid_cols[f], grid_rows[f]].imshow(conv_W_square, interpolation='nearest', cmap='Greys', vmin=np.min(net.conv_W[:,f]), vmax=np.max(net.conv_W[:,f]))
+	for f in range(conv_map_num):
+		conv_W_square = np.reshape(W[:,f], (conv_filter_side, conv_filter_side))
+		ax[grid_cols[f], grid_rows[f]].imshow(conv_W_square, interpolation='nearest', cmap='Greys', vmin=np.min(W[:,f]), vmax=np.max(W[:,f]))
 		ax[grid_cols[f], grid_rows[f]].set_xticks([])
 		ax[grid_cols[f], grid_rows[f]].set_yticks([])
 	fig.patch.set_facecolor('white')
@@ -593,6 +607,7 @@ def plot_perf_progress(net, epi_start=0):
 	X = np.arange( len(net.perf_train[epi_start:]) )+1
 	ax.plot(X, net.perf_train[epi_start:]*100, lw=3, marker='o')
 	ax.scatter(len(net.perf_train.shape)+1, net.perf_test*100, lw=3, marker='x', s=50)
+
 	fig.patch.set_facecolor('white')
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
@@ -600,6 +615,7 @@ def plot_perf_progress(net, epi_start=0):
 	ax.set_xticks(np.arange(1, len(net.perf_train[epi_start:])+1))
 	ax.xaxis.set_ticks_position('bottom')
 	ax.yaxis.set_ticks_position('left')
+	ax.set_ylim([60,97])
 	ax.set_xlabel('training episodes', fontsize=18)
 	ax.set_ylabel('trainig error (%)', fontsize=18)
 	plt.tight_layout()
@@ -624,6 +640,7 @@ def plot_perf_progress_multiruns(perf_train, perf_test, save_path_multiruns):
 	ax.tick_params(axis='both', which='major', direction='out', labelsize=17)
 	ax.xaxis.set_ticks_position('bottom')
 	ax.yaxis.set_ticks_position('left')
+	ax.set_ylim([60,97])
 	ax.set_xlabel('training episodes', fontsize=18)
 	ax.set_ylabel('trainig error (%)', fontsize=18)
 	plt.tight_layout()
