@@ -76,7 +76,7 @@ class Network:
 		self.perf_test 			= 0.
 		self.pypet 				= pypet
 		self.pypet_name 		= pypet_name if pypet_name != '' else name
-		
+
 		np.random.seed(self.seed)
 
 		hp.check_values(self)
@@ -93,7 +93,7 @@ class Network:
 				(float): training performance of the network.
 		"""
 
-		if not self.pypet: print "\ntraining network..."
+		if not self.pypet: print "\ntraining network %s..." %self.name
 		self._train_start = time.time()
 		self.classes = np.sort(np.unique(labels))
 		self.images_side = np.size(images, 2)

@@ -20,16 +20,16 @@ reload(hebbian_cnn)
 
 """ initialise parameters """
 parameter_dict = {	'conv_dHigh'			: 2.7,
-					'conv_dMid' 			: 1.8,
+					'conv_dMid' 			: 1.0,#1.8,
 					'conv_dNeut' 			: -0.07,
-					'conv_dLow' 			: -1.8,
+					'conv_dLow' 			: -0.6,#-1.8,
 					'feedf_dHigh'			: 4.5,
 					'feedf_dMid' 			: 0.4,#0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pretrain_test_lr_e-5_t_1',
-					'n_epi_crit' 			: 10,
-					'n_epi_dopa' 			: 0,
+					'name' 					: 'test_conv_dopa',
+					'n_epi_crit' 			: 0,
+					'n_epi_dopa' 			: 3,
 					'A' 					: 900.,
 					'lr_conv' 				: 1e-5,
 					'lr_feedf' 				: 0.01,
@@ -39,17 +39,17 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'conv_filter_side'		: 5,
 					'feedf_neuron_num'		: 49,
 					'explore_layer'			: 'none',
-					'dopa_layer'			: 'feedf',
+					'dopa_layer'			: 'conv',
 					'noise_explore'			: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: '',
-					'seed' 					: 952
+					'init_file' 			: 'output/pre_trained',
+					'seed' 					: 955
 					}
 
 """ load and pre-process training and testing images """
 images_train, labels_train, images_test, labels_test = helper.load_images(	
-																			classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
-																			# classes 		= np.array([4, 7, 9], dtype=int),
+																			# classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
+																			classes 		= np.array([4, 7, 9], dtype=int),
 																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (parameter_dict['conv_filter_side']-1)/2,
