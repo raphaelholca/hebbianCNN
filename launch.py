@@ -24,22 +24,22 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'conv_dNeut' 			: -0.07,
 					'conv_dLow' 			: -1.8,
 					'feedf_dHigh'			: 4.5,
-					'feedf_dMid' 			: 0.02,
+					'feedf_dMid' 			: 0.4,#0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pretrain_nolearning',
+					'name' 					: 'pretrain_test_lr_e-5_t_1',
 					'n_epi_crit' 			: 10,
 					'n_epi_dopa' 			: 0,
 					'A' 					: 900.,
-					'lr_conv' 				: 0.0,
+					'lr_conv' 				: 1e-5,
 					'lr_feedf' 				: 0.01,
-					't' 					: 0.01,
+					't' 					: 1.0,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
 					'conv_filter_side'		: 5,
 					'feedf_neuron_num'		: 49,
 					'explore_layer'			: 'none',
-					'dopa_layer'			: 'none',
+					'dopa_layer'			: 'feedf',
 					'noise_explore'			: 0.2,
 					'classifier'			: 'neural_prob',
 					'init_file' 			: '',
@@ -57,6 +57,7 @@ images_train, labels_train, images_test, labels_test = helper.load_images(
 																			)
 
 n_runs = 1
+
 run_start = time.time()
 save_path = os.path.join('output', parameter_dict['name'])
 perf_train_all, perf_test_all, save_path_multiruns, save_path, init_dir, all_init_files = helper.multiruns_init(n_runs, parameter_dict, save_path)

@@ -743,6 +743,7 @@ def mutliruns_collect(n_runs, r, perf_train, perf_test, perf_train_all, perf_tes
 		if r==n_runs-1:
 			pickle.dump({'perf_train_all':perf_train_all, 'perf_test_all':perf_test_all}, open(os.path.join(save_path_multiruns, 'all_runs'), 'w'))
 			plot_perf_progress_multiruns(perf_train_all, perf_test_all, save_path_multiruns)
+			print "\nmean test perf: %.1f +/- %.1f%%" %(np.mean(perf_test_all)*100, np.std(perf_test_all*100))
 
 	return perf_train_all, perf_test_all
 
