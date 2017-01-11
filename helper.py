@@ -537,9 +537,9 @@ def reconstruct(net, W, display_all=False):
 				jm+=1
 			im+=1
 
-		if display_all:
-			plt.figure()
-			plt.imshow(recon[:,:,f], interpolation='nearest', cmap='Greys', vmin=np.min(recon), vmax=np.max(recon))
+		# if display_all:
+		# 	plt.figure()
+		# 	plt.imshow(recon[:,:,f], interpolation='nearest', cmap='Greys', vmin=np.min(recon), vmax=np.max(recon))
 
 	recon_sum = np.zeros((n_pixels,n_pixels))
 	for f in range(L1_map_num):
@@ -548,7 +548,10 @@ def reconstruct(net, W, display_all=False):
 	recon_sum[::2,::2]/=1.7
 	recon_sum[1::2,1::2]*=1.7
 
-	return recon_sum
+	if display_all:
+		return recon_sum, recon
+	else:
+		return recon_sum
 
 def plot_CM(net):
 	""" plots the confusion matrix, with color on the diagonal, and with the alphas indicating the magnitude of the error """
