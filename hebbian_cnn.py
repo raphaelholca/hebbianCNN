@@ -18,7 +18,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, pypet=False, pypet_name=''):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, verbose=0, pypet=False, pypet_name=''):
 		""" 
 		Sets network parameters 
 
@@ -48,7 +48,8 @@ class Network:
 				classifier (str, optional): which classifier to use as the output layer. Valid values: 'neural_dopa' (hebbian + dopa), 'neural_prob' (poisson mixture model). Default: 'neural_prob'
 				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' for random initialization. Default: ''
 				seed (int, optional): seed of the random number generator. Default: None
-				pypet (bool, optional): whether the network simulation is part of pypet exploration. Default: False
+				verbose (int, optional): whether to show progress bar and text output. Default: False
+				pypet (bool, optional): verbose level: 0: none; 1: all output but progress bars; 2: all output. Default: 0
 				pypet_name (str, optional): name of the directory in which data is saved when doing pypet exploration. Default: ''
 		"""
 		self.dopa_conv 			= {'-e+r':conv_dHigh, '+e+r':conv_dMid, '-e-r':conv_dNeut, '+e-r':conv_dLow}
@@ -72,6 +73,7 @@ class Network:
 		self.classifier 		= classifier
 		self.init_file 			= init_file
 		self.seed 				= seed
+		self.verbose 			= verbose if not pypet else 0
 		self.perf_train 		= np.zeros(self.n_epi_tot)
 		self.perf_test 			= 0.
 		self.pypet 				= pypet
@@ -93,7 +95,7 @@ class Network:
 				(float): training performance of the network.
 		"""
 
-		if not self.pypet: print "\ntraining network %s..." %self.name
+		if self.verbose>=1: print "\ntraining network %s..." %self.name
 		self._train_start = time.time()
 		self.classes = np.sort(np.unique(labels))
 		self.images_side = np.size(images, 2)
@@ -104,14 +106,14 @@ class Network:
 		correct = 0.
 
 		for e in range(self.n_epi_tot):
-			if not self.pypet: print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
+			if self.verbose>=1: print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
 			
 			rnd_images, rnd_labels = hp.shuffle_images(images, labels)
 			last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
 			dopa_save = np.array([])
 			correct = 0.
 
-			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if not self.pypet else range(rnd_images.shape[0])
+			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if self.verbose>=2 else range(rnd_images.shape[0])
 			for i in loop_train:
 				explore_epi=np.copy(self.explore_layer) if e>=self.n_epi_crit else 'none'
 				dopa_layer_epi=np.copy(self.dopa_layer) if e>=self.n_epi_crit else 'none'
@@ -148,8 +150,8 @@ class Network:
 
 			self.perf_train[e] = correct/rnd_images.shape[0]
 			correct_class_W = np.sum(np.argmax(last_neuron_class,1)==np.argmax(self.class_W,1))
-			if not self.pypet: print "train performance: %.2F%%" % (self.perf_train[e] * 100)
-			if not self.pypet: print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
+			if self.verbose>=1: print "train performance: %.2F%%" % (self.perf_train[e] * 100)
+			if self.verbose>=1: print "correct W_out assignment: %d/%d" % (correct_class_W, self.feedf_neuron_num)
 
 		self._train_stop = time.time()
 		self.runtime = self._train_stop - self._train_start
@@ -168,12 +170,12 @@ class Network:
 				(float): test performance of the network.
 		"""
 
-		if not self.pypet: print "\ntesting network..."
+		if self.verbose>=1: print "\ntesting network..."
 
 		class_results = np.zeros(len(labels))
 		self.perf_test = 0.
 
-		loop_test = progressbar.ProgressBar()(range(images.shape[0])) if not self.pypet else range(images.shape[0])
+		loop_test = progressbar.ProgressBar()(range(images.shape[0])) if self.verbose>=2 else range(images.shape[0])
 		for i in loop_test:
 			class_results[i] = self.classes[self._propagate(images[i,:,:])[0]]
 			
@@ -185,7 +187,7 @@ class Network:
 				overTot = np.sum(labels==label)
 				self.CM[ilabel, iclassif] = float(classifiedAs)/overTot
 
-		if not self.pypet: hp.print_CM(self.perf_test, self.CM, self.classes)
+		if self.verbose>=1: hp.print_CM(self.perf_test, self.CM, self.classes)
 
 		return self.perf_test
 
