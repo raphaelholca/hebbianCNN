@@ -32,39 +32,43 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_conv_greedy_2',
+					'name' 					: 'pypet_conv_xplr',
 					'n_epi_crit' 			: 0,
-					'n_epi_dopa' 			: 10,
+					'n_epi_dopa' 			: 6,
 					'A' 					: 900.,
-					'lr_conv' 				: 0.01,
+					'lr_conv' 				: 1e-6,
 					'lr_feedf' 				: 0.01,
-					't' 					: 0.01,
+					't' 					: 1.0,#0.01,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
 					'conv_filter_side'		: 5,
 					'feedf_neuron_num'		: 49,
-					'explore_layer'			: 'none',
+					'explore_layer'			: 'conv',
 					'dopa_layer'			: 'conv',
-					'noise_explore'			: 0.0,
+					'noise_explore'			: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: 'output/pre_trained_all_classes',
+					'init_file' 			: 'output/pretrain_lr_e-6_t_e-0/pretrain_lr_e-6_t_e-0',
 					'seed' 					: 952
 					}
 
 """ explored parameters """
 explore_dict = {	
-					# 'conv_dHigh'			: [+4.00, +8.00, +12.0, +2.00, +2.50],
-					# 'conv_dNeut'			: [-0.10, -0.25, -0.75, +2.00, +2.50],
- 
-					# 'conv_dMid'			: [-0.01, +0.00, +0.01, +2.00, +2.50],
-					# 'conv_dLow'			: [-1.00, -2.00, -3.00, +2.00, +2.50]
+					'conv_dHigh'			: [+4.00, +8.00, +12.0, +2.00, +2.50],
+					'conv_dNeut'			: [-0.10, -0.25, -0.75, +2.00, +2.50],
 
-					# 'feedf_dHigh'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
-					# 'feedf_dNeut'			: [+0.50, +1.00, +1.50, +2.00, +2.50],
+					'conv_dMid'			: [-0.01, +0.00, +0.01, +2.00, +2.50],
+					'conv_dLow'			: [-1.00, -2.00, -3.00, +2.00, +2.50]
 
-					'feedf_dMid'			: [+1.00],
-					'feedf_dLow'			: [-0.80, -0.60, -0.40, -0.30, -0.20, -0.10, -0.00, +0.10, +0.20, +0.40],
-					# 'feedf_dLow'			: [-4.00, -3.00, -2.00, -1.00, -0.00],
+					# 'feedf_dHigh'			: [+4.00, +6.00, +8.00, +12.0],
+					# 'feedf_dNeut'			: [-0.50, -0.10, -0.05, -0.01],
+					
+					# 'feedf_dMid'			: [+0.01, +0.02, +0.05, +0.10],
+					# 'feedf_dLow'			: [-2.00],
+					
+					# 'conv_dMid'			: [+0.00, +0.10, +0.50, +1.00],
+					# 'conv_dLow'			: [-1.00, -0.70, +0.30, -0.00, +0.30, +0.70, +1.00],
+					
+				
 				}
 
 """ load and pre-process images """
@@ -79,6 +83,7 @@ images_train, labels_train, images_test, labels_test = helper.load_images(
 
 """ create directory to save data """
 parameter_dict['pypet'] = True
+parameter_dict['verbose'] = 0
 parameter_dict['pypet_name'] = parameter_dict['name']
 save_path = os.path.join('output', parameter_dict['name'])
 pp.check_dir(save_path, overwrite=False)
@@ -90,7 +95,7 @@ env = pypet.Environment(trajectory 		= 'explore_perf',
 						log_stdout		= False,
 						add_time 		= False,
 						multiproc 		= True,
-						ncores 			= 10,
+						ncores 			= 15,
 						filename		=  os.path.join(save_path, 'explore_perf.hdf5'))
 
 
@@ -112,7 +117,7 @@ helper.print_params(print_dict, save_path, runtime=toc-tic)
 
 """ plot results """
 name_best = pp.plot_results(folder_path=save_path)
-if len(explore_dict.keys())==5: pp.faceting(save_path)
+# if len(explore_dict.keys())==5: pp.faceting(save_path)
 
 print '\nrun name:\t' + parameter_dict['name']
 print 'start time:\t' + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(tic))
