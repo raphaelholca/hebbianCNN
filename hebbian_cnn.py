@@ -345,8 +345,13 @@ class Network:
 			post_neurons_lr = post_neurons * (lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
 			dW = (np.dot(pre_neurons.T, post_neurons_lr) - np.sum(post_neurons_lr, 0)*W)
 		
-		W += dW
-		W = np.clip(W, 1e-10, np.inf)
+		#update weights		
+		mask = np.all(W+dW>0.0, axis=0) #prevents weight change for entire hidden neuron if any weight of this neuron would become negative
+		W[:,mask] += dW[:,mask]
+
+		#update weights		
+		# W += dW
+		# W = np.clip(W, 1e-10, np.inf)
 
 		return W
 
