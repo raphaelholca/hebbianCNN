@@ -225,7 +225,7 @@ def import_traj(folder_path, file_name, traj_name='explore_perf'):
 	for k in param_traj:
 		if k[11:] != 'name':
 			xplr_values = np.array(param_traj[k].f_get_range())[ok_runs]
-			if len(np.unique(xplr_values)) > 1:
+			if len(np.unique(xplr_values)) >= 1:
 				param[k[11:]] = xplr_values
 
 	return perc_correct, np.array(perc_correct_all), param

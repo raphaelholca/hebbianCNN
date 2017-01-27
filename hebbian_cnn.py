@@ -306,6 +306,10 @@ class Network:
 			self._labels_all = np.roll(self._labels_all, 1)
 			self._labels_all[0] = label
 
+		###
+		# conv_activ = hp.softmax(conv_activ, t=self.t)
+
+
 		if explore=='none':
 			return np.argmax(class_activ), conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ
 		elif explore=='feedf':
@@ -352,7 +356,7 @@ class Network:
 		returns:
 			nupmy array: updated weights classification weights
 		"""
-
+		
 		for i_c, c in enumerate(self.classes):
 			self.class_W[:,i_c] = np.nanmean(self._feedf_activ_all[self._labels_all==c,:],0)
 		self.class_W = self.class_W/np.nansum(self.class_W, 1)[:,np.newaxis]
