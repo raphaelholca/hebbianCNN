@@ -269,10 +269,12 @@ class Network:
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
-		conv_activ = hp.softmax(conv_activ, t=self.t)
+		
 		
 		#subsample feature maps
+		conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax before pooling
 		subs_activ = hp.subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side)
+		# conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax after pooling
 
 		#activate feedforward layer
 		feedf_activ = hp.propagate_layerwise(subs_activ, self.feedf_W, SM=False)
@@ -305,6 +307,9 @@ class Network:
 			self._feedf_activ_all[0,:] = feedf_activ
 			self._labels_all = np.roll(self._labels_all, 1)
 			self._labels_all[0] = label
+
+
+
 
 		if explore=='none':
 			return np.argmax(class_activ), conv_input, conv_activ, subs_activ, feedf_activ, class_activ, class_activ
@@ -352,7 +357,7 @@ class Network:
 		returns:
 			nupmy array: updated weights classification weights
 		"""
-
+		
 		for i_c, c in enumerate(self.classes):
 			self.class_W[:,i_c] = np.nanmean(self._feedf_activ_all[self._labels_all==c,:],0)
 		self.class_W = self.class_W/np.nansum(self.class_W, 1)[:,np.newaxis]

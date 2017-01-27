@@ -27,7 +27,7 @@ parameter_dict = {	'conv_dHigh'			: 12.0,
 					'feedf_dMid' 			: 0.05, #0.3, #0.05,
 					'feedf_dNeut' 			: -0.05,#0.01, #-0.05
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'long_300n',
+					'name' 					: 'long_300n_maxpool',
 					'n_epi_crit' 			: 10,
 					'n_epi_dopa' 			: 40,
 					'A' 					: 900.,
