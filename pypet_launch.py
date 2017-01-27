@@ -32,7 +32,7 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_conv_xplr',
+					'name' 					: 'pypet_conv_xplr_2',
 					'n_epi_crit' 			: 0,
 					'n_epi_dopa' 			: 6,
 					'A' 					: 900.,
@@ -53,11 +53,11 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 
 """ explored parameters """
 explore_dict = {	
-					'conv_dHigh'			: [+4.00, +8.00, +12.0, +2.00, +2.50],
-					'conv_dNeut'			: [-0.10, -0.25, -0.75, +2.00, +2.50],
+					'conv_dHigh'			: [+0.00, +0.10, +1.00],
+					'conv_dNeut'			: [-0.01, -0.01, -0.00],
 
-					'conv_dMid'			: [-0.01, +0.00, +0.01, +2.00, +2.50],
-					'conv_dLow'			: [-1.00, -2.00, -3.00, +2.00, +2.50]
+					'conv_dMid'			: [+0.00, +0.01, +0.10],
+					'conv_dLow'			: [-0.10, -0.00, +0.01]
 
 					# 'feedf_dHigh'			: [+4.00, +6.00, +8.00, +12.0],
 					# 'feedf_dNeut'			: [-0.50, -0.10, -0.05, -0.01],
@@ -95,7 +95,7 @@ env = pypet.Environment(trajectory 		= 'explore_perf',
 						log_stdout		= False,
 						add_time 		= False,
 						multiproc 		= True,
-						ncores 			= 15,
+						ncores 			= 21,
 						filename		=  os.path.join(save_path, 'explore_perf.hdf5'))
 
 
