@@ -269,10 +269,12 @@ class Network:
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
-		conv_activ = hp.softmax(conv_activ, t=self.t)
+		
 		
 		#subsample feature maps
+		conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax before pooling
 		subs_activ = hp.subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side)
+		# conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax after pooling
 
 		#activate feedforward layer
 		feedf_activ = hp.propagate_layerwise(subs_activ, self.feedf_W, SM=False)
@@ -306,8 +308,7 @@ class Network:
 			self._labels_all = np.roll(self._labels_all, 1)
 			self._labels_all[0] = label
 
-		###
-		# conv_activ = hp.softmax(conv_activ, t=self.t)
+
 
 
 		if explore=='none':
@@ -344,8 +345,13 @@ class Network:
 			post_neurons_lr = post_neurons * (lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
 			dW = (np.dot(pre_neurons.T, post_neurons_lr) - np.sum(post_neurons_lr, 0)*W)
 		
-		W += dW
-		W = np.clip(W, 1e-10, np.inf)
+		#update weights		
+		mask = np.all(W+dW>0.0, axis=0) #prevents weight change for entire hidden neuron if any weight of this neuron would become negative
+		W[:,mask] += dW[:,mask]
+
+		#update weights		
+		# W += dW
+		# W = np.clip(W, 1e-10, np.inf)
 
 		return W
 

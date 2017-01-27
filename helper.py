@@ -248,18 +248,18 @@ def subsampling_numba(FM, SSM, ite):
 				select = FM[i:i+2,j:j+2,f]
 				
 				#MAX-POOLING			
-				tmp_max=-1
-				for k in range(2):
-					for l in range(2):
-						tmp_max = select[k,l] if tmp_max < select[k,l] else tmp_max
-				SSM[im,jm,f] = tmp_max
-
-				#SUM-POOLING
-				# tmp_sum=0
+				# tmp_max=-1
 				# for k in range(2):
 				# 	for l in range(2):
-				# 		tmp_sum = tmp_sum + select[k,l]
-				# SSM[im,jm,f] = tmp_sum
+				# 		tmp_max = select[k,l] if tmp_max < select[k,l] else tmp_max
+				# SSM[im,jm,f] = tmp_max
+
+				#SUM-POOLING
+				tmp_sum=0
+				for k in range(2):
+					for l in range(2):
+						tmp_sum = tmp_sum + select[k,l]
+				SSM[im,jm,f] = tmp_sum
 	
 	return SSM
 
