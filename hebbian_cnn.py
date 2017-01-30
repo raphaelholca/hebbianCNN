@@ -18,7 +18,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, verbose=0, pypet=False, pypet_name=''):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, subs_stride=2, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, verbose=0, pypet=False, pypet_name=''):
 		""" 
 		Sets network parameters 
 
@@ -41,6 +41,7 @@ class Network:
 				batch_size (int, optional): size of training batch. Default: 196
 				conv_map_num (int, optional): number of convolutional filter maps. Default: 5
 				conv_filter_side (int, optional): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2). Default: 5
+				subs_stride (int, optional): stride of the subsampling; the convolutional maps will be reduced by this factor. Default: 2
 				feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 				explore_layer (str, optional): in which layer to perform exploration by noise addition. Valid values: 'none', 'conv', 'feedf', 'both'. Default: 'feedf'
 				dopa_layer (str, optional): in which layer to release dopamine. Valid values: 'none', 'conv', 'feedf', 'both'. Default: 'feedf'
@@ -66,6 +67,7 @@ class Network:
 		self.batch_size 		= batch_size
 		self.conv_map_num 		= conv_map_num
 		self.conv_filter_side 	= conv_filter_side
+		self.subs_stride 		= subs_stride
 		self.feedf_neuron_num 	= feedf_neuron_num
 		self.explore_layer		= explore_layer
 		self.dopa_layer 		= dopa_layer
@@ -197,7 +199,7 @@ class Network:
 		self.class_neuron_num 	= len(self.classes)
 		self.conv_neuron_num 	= (self.images_side - self.conv_filter_side + 1)**2
 		self.conv_map_side 		= int(np.sqrt(self.conv_neuron_num))
-		self.subs_map_side 		= self.conv_map_side/2
+		self.subs_map_side 		= self.conv_map_side/self.subs_stride
 		self.CM 				= np.zeros((self.class_neuron_num, self.class_neuron_num))
 
 		if self.init_file == '':
@@ -268,12 +270,12 @@ class Network:
 			conv_activ_noise = conv_activ + np.random.normal(0, np.std(conv_activ)*self.noise_explore, np.shape(conv_activ))
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
 			#subsample feature maps
-			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side)
+			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side, self.subs_stride)
 		
 		
 		#subsample feature maps
 		conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax before pooling
-		subs_activ = hp.subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side)
+		subs_activ = hp.subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side, self.subs_stride)
 		# conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax after pooling
 
 		#activate feedforward layer
