@@ -205,7 +205,7 @@ def get_conv_input(image, conv_input, conv_side):
 			im+=1
 	return conv_input	
 
-def subsample(conv_activ, conv_map_side, conv_map_num, subs_map_side):
+def subsample(conv_activ, conv_map_side, conv_map_num, subs_map_side, subs_stride):
 	"""
 	Subsamples the convolutional feature maps
 
@@ -214,50 +214,51 @@ def subsample(conv_activ, conv_map_side, conv_map_num, subs_map_side):
 		conv_map_side (int): size of the convolutional maps
 		conv_map_num (int): number of maps in the conv layer
 		subs_map_side (int): size of the subsampled conv maps
+		subs_stride (int): stride of the subsampling
 
 	returns:
 		subsampled feature maps
 	"""
 	FM = np.reshape(conv_activ, (conv_map_side, conv_map_side, conv_map_num))
 	SSM = np.zeros((subs_map_side, subs_map_side, conv_map_num))
-	ite = np.arange(0, conv_map_side, 2)
-	SSM = subsampling_numba(FM, SSM, ite)
+	ite = np.arange(0, conv_map_side, subs_stride)
+	SSM = subsampling_numba(FM, SSM, ite, subs_stride)
 	SSM = softmax( np.reshape(SSM, (subs_map_side**2, conv_map_num) ), t=1. )
 	subs_activ = np.reshape(SSM, (-1))[np.newaxis,:]
 
 	return subs_activ
 
 @numba.njit
-def subsampling_numba(FM, SSM, ite):
+def subsampling_numba(FM, SSM, ite, stride):
 	"""
 	Numba implementation of the subsample routine; must be pure python.
 
 	Args:
 		FM (3D numpy array): feature maps; size = (cMaps_side x cMaps_side x nFeatureMaps)
-		SSM (3D numpy array): empty subsampled feature maps to be filled; size = (cMaps_side/2 x cMaps_side/2 x nFeatureMaps)
+		SSM (3D numpy array): empty subsampled feature maps to be filled; size = (cMaps_side/stride x cMaps_side/stride x nFeatureMaps)
 		ite (1D numpy array): iterator used over FM (contains np.arange(0, cMaps_side, 2))
 
 	returns:
-		3D numpy array; subsampled feature maps; size = (cMaps_side/2 x cMaps_side/2 nFeatureMaps)
+		3D numpy array; subsampled feature maps; size = (cMaps_side/stride x cMaps_side/stride nFeatureMaps)
 	"""
 	for f in range(FM.shape[2]):
 		for im in range(ite.shape[0]):
 			i=ite[im]
 			for jm in range(ite.shape[0]):
 				j=ite[jm]
-				select = FM[i:i+2,j:j+2,f]
+				select = FM[i:i+stride,j:j+stride,f]
 				
 				#MAX-POOLING			
 				# tmp_max=-1
-				# for k in range(2):
-				# 	for l in range(2):
+				# for k in range(stride):
+				# 	for l in range(stride):
 				# 		tmp_max = select[k,l] if tmp_max < select[k,l] else tmp_max
 				# SSM[im,jm,f] = tmp_max
 
 				#SUM-POOLING
 				tmp_sum=0
-				for k in range(2):
-					for l in range(2):
+				for k in range(stride):
+					for l in range(stride):
 						tmp_sum = tmp_sum + select[k,l]
 				SSM[im,jm,f] = tmp_sum
 	
@@ -522,7 +523,8 @@ def reconstruct(net, W, display_all=False):
 	filter_side = int(np.sqrt(np.size(net.conv_W,0)))
 	L1_map_num = np.size(net.conv_W,1)
 	n_pixels = net.images_side
-	step=1 if n_pixels==18 else 2
+	stride = net.subs_stride
+	step=1 if n_pixels==18 else stride
 
 	conv_W_plot = np.reshape(net.conv_W, (filter_side, filter_side, L1_map_num))
 	W = np.reshape(W, (net.subs_map_side, net.subs_map_side, L1_map_num))
@@ -545,11 +547,11 @@ def reconstruct(net, W, display_all=False):
 	for f in range(L1_map_num):
 		recon_sum[:,:]+=recon[:,:,f]/np.max(recon[:,:,f])
 	
-	recon_sum[::2,::2]/=1.7
-	recon_sum[1::2,1::2]*=1.7
+	recon_sum[::stride,::stride]/=1.7
+	recon_sum[1::stride,1::stride]*=1.7
 
-	recon[::2,::2, :]/=1.7
-	recon[1::2,1::2, :]*=1.7
+	recon[::stride,::stride, :]/=1.7
+	recon[1::stride,1::stride, :]*=1.7
 
 	if display_all:
 		return recon_sum, recon
