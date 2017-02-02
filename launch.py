@@ -19,39 +19,40 @@ reload(helper)
 reload(hebbian_cnn)
 
 """ initialise parameters """
-parameter_dict = {	'conv_dHigh'			: 12.0,
-					'conv_dMid' 			: 0.1,#1.0,
-					'conv_dNeut' 			: -0.5,
-					'conv_dLow' 			: -2.0,#1.0,
+parameter_dict = {	'conv_dHigh'			: 0.5,
+					'conv_dMid' 			: 0.1,#0.1,
+					'conv_dNeut' 			: -0.1 ,
+					'conv_dLow' 			: -0.1,#1.0,
 					'feedf_dHigh'			: 6.0,
-					'feedf_dMid' 			: 0.05, #0.05, #0.3, #0.05,
-					'feedf_dNeut' 			: -0.05,#0.01, #-0.05
-					'feedf_dLow' 			: -2.0,
-					'name' 					: 'subs_stride_4',
+					'feedf_dMid' 			: 0.1, #0.05, 
+					'feedf_dNeut' 			: -0.05,
+					'feedf_dLow' 			: -1.0, #-2.0,
+					'name' 					: 't_conv_0-01',
 					'n_epi_crit' 			: 10,
-					'n_epi_dopa' 			: 20,
+					'n_epi_dopa' 			: 0,
 					'A' 					: 900.,
 					'lr_conv' 				: 1e-6,
 					'lr_feedf' 				: 0.01,
-					't' 					: 1.0,
+					't_conv'				: 0.01,#0.01,
+					't_feedf'				: 1.0,#0.01,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
 					'conv_filter_side'		: 5,
 					'subs_stride' 			: 2,
 					'feedf_neuron_num'		: 49,
-					'explore_layer'			: 'feedf',
-					'dopa_layer'			: 'feedf',
+					'explore_layer'			: 'none',
+					'dopa_layer'			: 'none',
 					'noise_explore'			: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: '', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
+					'init_file' 			: '',#'output/pretrain_lr_e-6_t_e-0', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
 					'seed' 					: 952,
 					'verbose'		 		: 1
 					}
 
 """ load and pre-process training and testing images """
 images_train, labels_train, images_test, labels_test = helper.load_images(	
-																			classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
-																			# classes 		= np.array([4, 7, 9], dtype=int),
+																			# classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
+																			classes 		= np.array([4, 7, 9], dtype=int),
 																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (parameter_dict['conv_filter_side']-1)/2,

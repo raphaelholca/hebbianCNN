@@ -18,7 +18,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t=0.01, batch_size=196, conv_map_num=5, subs_stride=2, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, verbose=0, pypet=False, pypet_name=''):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t_conv=0.01, t_feedf=1.0, batch_size=196, conv_map_num=5, subs_stride=2, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, verbose=0, pypet=False, pypet_name=''):
 		""" 
 		Sets network parameters 
 
@@ -37,7 +37,8 @@ class Network:
 				A (float, optional): parameter for the normalization of the input images (pixel values sum to A). Default: 900
 				lr_conv (float, optional): learning rate of the network for the convolutional layer. Default: 0.01
 				lr_feedf (float, optional): learning rate of the network for the feedforward layer. Default: 0.01
-				t (float, optional): temperature of the softmax function ('softness' of the winner-take-all). Default: 0.01
+				t_conv (float, optional): temperature of the softmax function ('softness' of the winner-take-all), conv layer. Default: 0.01
+				t_feedf (float, optional): temperature of the softmax function ('softness' of the winner-take-all), feedf layer. Default: 1.0
 				batch_size (int, optional): size of training batch. Default: 196
 				conv_map_num (int, optional): number of convolutional filter maps. Default: 5
 				conv_filter_side (int, optional): size of each convolutional filter (side of filter in pixel; total number of pixel in filter is conv_filter_side^2). Default: 5
@@ -63,7 +64,8 @@ class Network:
 		self.A 					= A
 		self.lr_conv 			= lr_conv
 		self.lr_feedf			= lr_feedf
-		self.t 					= t
+		self.t_conv 			= t_conv
+		self.t_feedf 			= t_feedf
 		self.batch_size 		= batch_size
 		self.conv_map_num 		= conv_map_num
 		self.conv_filter_side 	= conv_filter_side
@@ -112,7 +114,6 @@ class Network:
 			
 			rnd_images, rnd_labels = hp.shuffle_images(images, labels)
 			last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
-			dopa_save = np.array([])
 			correct = 0.
 
 			loop_train = progressbar.ProgressBar()(range(rnd_images.shape[0])) if self.verbose>=2 else range(rnd_images.shape[0])
@@ -146,7 +147,6 @@ class Network:
 				elif self.classifier == 'neural_prob':
 					if i%100==0 and i!=0 : self._learn_out_proba()
 
-				dopa_save = np.append(dopa_save, dopa_release)
 				correct += float(self.classes[np.argmax(class_activ)] == rnd_labels[i])
 				last_neuron_class[np.argmax(feedf_activ), np.argwhere(rnd_labels[i]==self.classes)] += 1
 
@@ -268,15 +268,15 @@ class Network:
 		conv_activ = hp.propagate_layerwise(conv_input, self.conv_W, SM=False)
 		if explore=='conv' or explore=='both':
 			conv_activ_noise = conv_activ + np.random.normal(0, np.std(conv_activ)*self.noise_explore, np.shape(conv_activ))
-			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t)
+			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t_conv)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side, self.subs_stride)
 		
 		
 		#subsample feature maps
-		conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax before pooling
+		conv_activ = hp.softmax(conv_activ, t=self.t_conv) ###<- softmax before pooling
 		subs_activ = hp.subsample(conv_activ, self.conv_map_side, self.conv_map_num, self.subs_map_side, self.subs_stride)
-		# conv_activ = hp.softmax(conv_activ, t=self.t) ###<- softmax after pooling
+		# conv_activ = hp.softmax(conv_activ, t=self.t_conv) ###<- softmax after pooling
 
 		#activate feedforward layer
 		feedf_activ = hp.propagate_layerwise(subs_activ, self.feedf_W, SM=False)
@@ -289,13 +289,13 @@ class Network:
 		if explore=='both':
 			feedf_activ_noise = feedf_activ_noise + np.random.normal(0, np.std(feedf_activ)*self.noise_explore, np.shape(feedf_activ))
 		if explore=='feedf' or explore=='conv' or explore=='both':
-			feedf_activ_noise = hp.softmax(feedf_activ_noise, t=self.t)
+			feedf_activ_noise = hp.softmax(feedf_activ_noise, t=self.t_feedf)
 			if self.classifier == 'neural_dopa':
 				class_activ_noise = hp.propagate_layerwise(feedf_activ_noise, self.class_W, SM=True, t=0.001)
 			elif self.classifier == 'neural_prob':
 				class_activ_noise = np.dot(feedf_activ_noise, self.class_W)
 		
-		feedf_activ = hp.softmax(feedf_activ, t=self.t)
+		feedf_activ = hp.softmax(feedf_activ, t=self.t_feedf)
 
 		#activate classification layer
 		if self.classifier == 'neural_dopa':
