@@ -744,7 +744,7 @@ def multiruns_init(n_runs, parameter_dict, save_path):
 		os.mkdir(save_path_multiruns)
 		save_path = os.path.join(save_path_multiruns, parameter_dict['name'])
 		init_dir = parameter_dict['init_file']
-		all_init_files = next(os.walk(parameter_dict['init_file']))[1] if init_dir != '' else None
+		all_init_files = sorted(next(os.walk(parameter_dict['init_file']))[1]) if init_dir != '' else None
 
 		return perf_train_all, perf_test_all, save_path_multiruns, save_path, init_dir, all_init_files
 	else:

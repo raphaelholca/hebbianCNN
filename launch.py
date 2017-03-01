@@ -5,6 +5,8 @@ Date: 26/05/2015
 This code creates a hebbian convolutional neural network object and trains it on the MNIST dataset. The network consists of four layers: a convolutional layer, a subsampling layer, a feedforward layer and a classification layer. Only three of these layers have modifiable weights: the convolution, feedforward and classification layers. The learning rule is a hebbian learning rule augmented with a learning mechanism inspired from dopamine signalling in animal cortex.
 """
 
+
+
 import os
 import matplotlib
 if 'Documents' in os.getcwd():
@@ -14,52 +16,53 @@ import helper
 import hebbian_cnn
 import time
 import datetime
+np.random.seed(0)
 
 reload(helper)
 reload(hebbian_cnn)
 
 """ initialise parameters """
-parameter_dict = {	'conv_dHigh'			: 0.5,
-					'conv_dMid' 			: 0.1,#0.1,
-					'conv_dNeut' 			: -0.1 ,
-					'conv_dLow' 			: -0.1,#1.0,
+parameter_dict = {	'conv_dHigh'			: 2.7,
+					'conv_dMid' 			: 0.01,
+					'conv_dNeut' 			: -0.07 ,
+					'conv_dLow' 			: -1.9,
 					'feedf_dHigh'			: 6.0,
 					'feedf_dMid' 			: 0.1, #0.05, 
 					'feedf_dNeut' 			: -0.05,
 					'feedf_dLow' 			: -1.0, #-2.0,
-					'name' 					: 't_conv_0-01',
-					'n_epi_crit' 			: 10,
-					'n_epi_dopa' 			: 0,
+					'name' 					: '7_conv_greedy_feedf_hebb_launch',
+					'n_epi_crit' 			: 6,
+					'n_epi_dopa' 			: 6,
 					'A' 					: 900.,
 					'lr_conv' 				: 1e-6,
 					'lr_feedf' 				: 0.01,
-					't_conv'				: 0.01,#0.01,
-					't_feedf'				: 1.0,#0.01,
+					't_conv'				: 1.0,
+					't_feedf'				: 1.0,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
 					'conv_filter_side'		: 5,
 					'subs_stride' 			: 2,
 					'feedf_neuron_num'		: 49,
 					'explore_layer'			: 'none',
-					'dopa_layer'			: 'none',
+					'dopa_layer'			: 'conv',
 					'noise_explore'			: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: '',#'output/pretrain_lr_e-6_t_e-0', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
-					'seed' 					: 952,
+					'init_file' 			: '', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
+					'seed' 					: 954,
 					'verbose'		 		: 1
 					}
 
 """ load and pre-process training and testing images """
 images_train, labels_train, images_test, labels_test = helper.load_images(	
-																			# classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
-																			classes 		= np.array([4, 7, 9], dtype=int),
+																			classes 		= np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype=int),
+																			# classes 		= np.array([4, 7, 9], dtype=int),
 																			dataset_train	= 'train',
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (parameter_dict['conv_filter_side']-1)/2,
 																			load_test 		= True
 																			)
 
-n_runs = 3
+n_runs = 5
 
 run_start = time.time()
 save_path = os.path.join('output', parameter_dict['name'])

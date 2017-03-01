@@ -24,22 +24,22 @@ reload(helper)
 pp = reload(pp)
 
 """ static parameters """
-parameter_dict = {	'conv_dHigh'			: 2.7,
-					'conv_dMid' 			: 1.8,
-					'conv_dNeut' 			: -0.07,
-					'conv_dLow' 			: -1.8,
+parameter_dict = {	'conv_dHigh'			: 0.5,
+					'conv_dMid' 			: 0.1,
+					'conv_dNeut' 			: -0.1,
+					'conv_dLow' 			: -0.1,
 					'feedf_dHigh'			: 4.5,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_feedf_xplr_3',
+					'name' 					: 'pypet_feedf_xplr_5',
 					'n_epi_crit' 			: 0,
 					'n_epi_dopa' 			: 6,
 					'A' 					: 900.,
 					'lr_conv' 				: 1e-6,
 					'lr_feedf' 				: 0.01,
-					't_conv'				: 1.0,#0.01,
-					't_feedf'				: 1.0,#0.01,
+					't_conv'				: 1.0,
+					't_feedf'				: 1.0,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
 					'conv_filter_side'		: 5,
@@ -50,25 +50,25 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'noise_explore'			: 0.2,
 					'classifier'			: 'neural_prob',
 					'init_file' 			: 'output/pretrain_lr_e-6_t_e-0/pretrain_lr_e-6_t_e-0',
-					'seed' 					: 952
+					'seed' 					: 954
 					}
 
 """ explored parameters """
 explore_dict = {	
-					# 'conv_dHigh'			: [-0.50, +0.00, +0.50],
-					# 'conv_dNeut'			: [-0.50, -0.1, -0.00],
+					# 'conv_dHigh'			: [+0.5],
+					# 'conv_dNeut'			: [-0.1],
 
-					# 'conv_dMid'			: [+0.10, +0.50, +1.00],
-					# 'conv_dLow'			: [-1.00, -0.50, -0.10]
+					# 'conv_dMid'				: [+0.1],
+					# 'conv_dLow'				: [-0.1]
 
-					'feedf_dHigh'			: [+4.00, +6.00, +8.00],
-					'feedf_dNeut'			: [-0.50, -0.10, -0.05],
+					'feedf_dHigh'			: [+2.00, +6.00, +10.0],
+					'feedf_dNeut'			: [-1.00, -0.50, -0.10],
 					
-					'feedf_dMid'			: [+0.01, +0.05, +0.10],
-					'feedf_dLow'			: [-2.00, -1.0, -0.5],
+					'feedf_dMid'			: [+0.00, +0.01, +0.10],
+					'feedf_dLow'			: [-2.00, -1.00, -0.00]
 					
-					# 'conv_dMid'			: [+0.00, +0.10, +1.00],
-					# 'conv_dLow'			: [-1.00, -0.10, -0.00, +0.1, +1.00],
+					# 'conv_dMid'			: [-1.0, +0.0, +0.1],
+					# 'conv_dLow'			: [-5.0, -2.0, -1.0, +0.0, +1.00],
 					
 				
 				}
@@ -97,7 +97,7 @@ env = pypet.Environment(trajectory 		= 'explore_perf',
 						log_stdout		= False,
 						add_time 		= False,
 						multiproc 		= True,
-						ncores 			= 11,
+						ncores 			= 12,
 						filename		=  os.path.join(save_path, 'explore_perf.hdf5'))
 
 
