@@ -19,7 +19,7 @@ hp = reload(hp)
 class Network:
 	""" Hebbian convolutional neural network with reward-based learning """
 	
-	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t_conv=0.01, t_feedf=1.0, batch_size=196, conv_map_num=5, subs_stride=2, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore=0.2, classifier='neural_prob', init_file='', seed=None, verbose=0, pypet=False, pypet_name=''):
+	def __init__(self, conv_dHigh, conv_dMid, conv_dNeut, conv_dLow, feedf_dHigh, feedf_dMid, feedf_dNeut, feedf_dLow, name='net', n_epi_crit=10, n_epi_dopa=10, A=900., lr_conv=0.01, lr_feedf=0.01, t_conv=0.01, t_feedf=1.0, batch_size=196, conv_map_num=5, subs_stride=2, conv_filter_side=5, feedf_neuron_num=49, explore_layer='feedf', dopa_layer='feedf', noise_explore_conv=0.2, noise_explore_feedf=0.2, classifier='neural_prob', init_file='', seed=None, verbose=0, pypet=False, pypet_name=''):
 		""" 
 		Sets network parameters 
 
@@ -47,7 +47,8 @@ class Network:
 				feedf_neuron_num (int, optional): number of neurons in the feedforward layer. Default: 49
 				explore_layer (str, optional): in which layer to perform exploration by noise addition. Valid values: 'none', 'conv', 'feedf', 'both'. Default: 'feedf'
 				dopa_layer (str, optional): in which layer to release dopamine. Valid values: 'none', 'conv', 'feedf', 'both'. Default: 'feedf'
-				noise_explore (float, optional): parameter of the standard deviation of the normal distribution from which noise is drawn for exploration. Default: 0.2
+				noise_explore_conv (float, optional): parameter of the standard deviation of the normal distribution from which noise is drawn for exploration (conv layer). Default: 0.2
+				noise_explore_feedf (float, optional): parameter of the standard deviation of the normal distribution from which noise is drawn for exploration (feedf layer). Default: 0.2
 				classifier (str, optional): which classifier to use as the output layer. Valid values: 'neural_dopa' (hebbian + dopa), 'neural_prob' (poisson mixture model). Default: 'neural_prob'
 				init_file (str, optional): initialize weights with pre-trained weights saved to file; use '' for random initialization. Default: ''
 				seed (int, optional): seed of the random number generator. Default: None
@@ -55,34 +56,35 @@ class Network:
 				pypet (bool, optional): verbose level: 0: none; 1: all output but progress bars; 2: all output. Default: 0
 				pypet_name (str, optional): name of the directory in which data is saved when doing pypet exploration. Default: ''
 		"""
-		self.dopa_conv 			= {'-e+r':conv_dHigh, '+e+r':conv_dMid, '-e-r':conv_dNeut, '+e-r':conv_dLow}
-		self.dopa_feedf 		= {'-e+r':feedf_dHigh, '+e+r':feedf_dMid, '-e-r':feedf_dNeut, '+e-r':feedf_dLow}
-		self.dopa_class 		= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2}
-		self.name 				= name
-		self.n_epi_crit 		= n_epi_crit
-		self.n_epi_dopa 		= n_epi_dopa
-		self.n_epi_tot 			= n_epi_crit + n_epi_dopa
-		self.A 					= A
-		self.lr_conv 			= lr_conv
-		self.lr_feedf			= lr_feedf
-		self.t_conv 			= t_conv
-		self.t_feedf 			= t_feedf
-		self.batch_size 		= batch_size
-		self.conv_map_num 		= conv_map_num
-		self.conv_filter_side 	= conv_filter_side
-		self.subs_stride 		= subs_stride
-		self.feedf_neuron_num 	= feedf_neuron_num
-		self.explore_layer		= explore_layer
-		self.dopa_layer 		= dopa_layer
-		self.noise_explore 		= np.clip(noise_explore, 1e-20, np.inf)
-		self.classifier 		= classifier
-		self.init_file 			= init_file
-		self.seed 				= seed
-		self.verbose 			= verbose if not pypet else 0
-		self.perf_train 		= np.zeros(self.n_epi_tot)
-		self.perf_test 			= 0.
-		self.pypet 				= pypet
-		self.pypet_name 		= pypet_name if pypet_name != '' else name
+		self.dopa_conv 				= {'-e+r':conv_dHigh, '+e+r':conv_dMid, '-e-r':conv_dNeut, '+e-r':conv_dLow}
+		self.dopa_feedf 			= {'-e+r':feedf_dHigh, '+e+r':feedf_dMid, '-e-r':feedf_dNeut, '+e-r':feedf_dLow}
+		self.dopa_class 			= {'-e+r':0.3, '+e+r':0.3, '-e-r':-0.2, '+e-r':-0.2}
+		self.name 					= name
+		self.n_epi_crit 			= n_epi_crit
+		self.n_epi_dopa 			= n_epi_dopa
+		self.n_epi_tot 				= n_epi_crit + n_epi_dopa
+		self.A 						= A
+		self.lr_conv 				= lr_conv
+		self.lr_feedf				= lr_feedf
+		self.t_conv 				= t_conv
+		self.t_feedf 				= t_feedf
+		self.batch_size 			= batch_size
+		self.conv_map_num 			= conv_map_num
+		self.conv_filter_side 		= conv_filter_side
+		self.subs_stride 			= subs_stride
+		self.feedf_neuron_num 		= feedf_neuron_num
+		self.explore_layer			= explore_layer
+		self.dopa_layer 			= dopa_layer
+		self.noise_explore_conv		= np.clip(noise_explore_conv, 1e-20, np.inf)
+		self.noise_explore_feedf	= np.clip(noise_explore_feedf, 1e-20, np.inf)
+		self.classifier 			= classifier
+		self.init_file 				= init_file
+		self.seed 					= seed
+		self.verbose 				= verbose if not pypet else 0
+		self.perf_train 			= np.zeros(self.n_epi_tot)
+		self.perf_test 				= 0.
+		self.pypet 					= pypet
+		self.pypet_name 			= pypet_name if pypet_name != '' else name
 
 		np.random.seed(self.seed)
 
@@ -136,7 +138,7 @@ class Network:
 				for b in range(int(np.ceil(self.conv_neuron_num/float(bs)))):
 					dopa_release_conv = hp.dopa_value(dopa_release, self.dopa_conv)*np.ones(bs) if (dopa_layer_epi=='conv' or dopa_layer_epi=='both') else None
 					self.conv_W = self._learning_step(conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, lr=self.lr_conv, dopa=dopa_release_conv)
-
+				
 				#...of the feedforward layer
 				dopa_release_feedf = hp.dopa_value(dopa_release, self.dopa_feedf) if (dopa_layer_epi=='feedf' or dopa_layer_epi=='both') else None
 				self.feedf_W = self._learning_step(subs_activ, feedf_activ, self.feedf_W, lr=self.lr_feedf, dopa=dopa_release_feedf)
@@ -268,7 +270,7 @@ class Network:
 		#activate convolutional feature maps
 		conv_activ = hp.propagate_layerwise(conv_input, self.conv_W, SM=False)
 		if explore=='conv' or explore=='both':
-			conv_activ_noise = conv_activ + np.random.normal(0, np.std(conv_activ)*self.noise_explore*4, np.shape(conv_activ))
+			conv_activ_noise = conv_activ + np.random.normal(0, np.std(conv_activ)*self.noise_explore_conv, np.shape(conv_activ))
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t_conv)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side, self.subs_stride)
@@ -284,11 +286,11 @@ class Network:
 		
 		#add exploration
 		if explore=='feedf':
-			feedf_activ_noise = feedf_activ + np.random.normal(0, np.std(feedf_activ)*self.noise_explore, np.shape(feedf_activ))
+			feedf_activ_noise = feedf_activ + np.random.normal(0, np.std(feedf_activ)*self.noise_explore_feedf, np.shape(feedf_activ))
 		elif explore=='conv' or explore=='both':
 			feedf_activ_noise = hp.propagate_layerwise(subs_activ_noise, self.feedf_W, SM=False)
 		if explore=='both':
-			feedf_activ_noise = feedf_activ_noise + np.random.normal(0, np.std(feedf_activ)*self.noise_explore, np.shape(feedf_activ))
+			feedf_activ_noise = feedf_activ_noise + np.random.normal(0, np.std(feedf_activ)*self.noise_explore_feedf, np.shape(feedf_activ))
 		if explore=='feedf' or explore=='conv' or explore=='both':
 			feedf_activ_noise = hp.softmax(feedf_activ_noise, t=self.t_feedf)
 			if self.classifier == 'neural_dopa':
