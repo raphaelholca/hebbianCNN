@@ -230,7 +230,7 @@ def import_traj(folder_path, file_name, traj_name='explore_perf'):
 
 	return perc_correct, np.array(perc_correct_all), param
 
-def faceting(folder_path, savefig=True, stat_test=False, threshold=0.002, t_threshold=0.10, vmin=0.8, vmax=0.97, fontsize_label=20, fontsize_tick=18, print_best_perf=True):
+def faceting(folder_path, savefig=True, stat_test=False, threshold=0.002, t_threshold=0.10, vmin=None, vmax=None, fontsize_label=20, fontsize_tick=18, print_best_perf=True):
 	"""
 	Function to plot the results of gridsearch parameter exploration
 
@@ -250,9 +250,11 @@ def faceting(folder_path, savefig=True, stat_test=False, threshold=0.002, t_thre
 	file_name = 'explore_perf'
 
 	perc_correct, perc_correct_all, param = import_traj(folder_path, file_name)
-
 	order_face = param.keys() #['dNeut', 'dHigh', 'dMid', 'dLow'] #order is x1, y1, x2, y2
 	n_measures = len(np.unique(param[param.keys()[0]]))
+
+	vmin = np.min(perc_correct) if vmin is None else vmin
+	vmax = np.max(perc_correct) if vmax is None else vmax
 
 	#find best parameters combination
 	arg_best = np.argmax(perc_correct)

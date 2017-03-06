@@ -12,6 +12,7 @@ import progressbar
 import pickle
 import os
 import time
+from pdb import set_trace
 
 hp = reload(hp)
 
@@ -111,7 +112,6 @@ class Network:
 
 		for e in range(self.n_epi_tot):
 			if self.verbose>=1: print "\ntrain episope: %d/%d" % (e+1, self.n_epi_tot)
-			
 			rnd_images, rnd_labels = hp.shuffle_images(images, labels)
 			last_neuron_class = np.zeros((self.feedf_neuron_num, self.class_neuron_num))
 			correct = 0.
@@ -132,7 +132,8 @@ class Network:
 				# update weights...
 				#...of the convolutional maps
 				bs = self.batch_size
-				for b in range(self.conv_neuron_num/bs):
+
+				for b in range(int(np.ceil(self.conv_neuron_num/float(bs)))):
 					dopa_release_conv = hp.dopa_value(dopa_release, self.dopa_conv)*np.ones(bs) if (dopa_layer_epi=='conv' or dopa_layer_epi=='both') else None
 					self.conv_W = self._learning_step(conv_input[b*bs:(b+1)*bs, :], conv_activ[b*bs:(b+1)*bs, :], self.conv_W, lr=self.lr_conv, dopa=dopa_release_conv)
 
@@ -267,7 +268,7 @@ class Network:
 		#activate convolutional feature maps
 		conv_activ = hp.propagate_layerwise(conv_input, self.conv_W, SM=False)
 		if explore=='conv' or explore=='both':
-			conv_activ_noise = conv_activ + np.random.normal(0, np.std(conv_activ)*self.noise_explore, np.shape(conv_activ))
+			conv_activ_noise = conv_activ + np.random.normal(0, np.std(conv_activ)*self.noise_explore*4, np.shape(conv_activ))
 			conv_activ_noise = hp.softmax(conv_activ_noise, t=self.t_conv)
 			#subsample feature maps
 			subs_activ_noise = hp.subsample(conv_activ_noise, self.conv_map_side, self.conv_map_num, self.subs_map_side, self.subs_stride)
@@ -347,7 +348,7 @@ class Network:
 			post_neurons_lr = post_neurons * (lr * dopa[:,np.newaxis]) #adds the effect of dopamine to the learning rate  
 			dW = (np.dot(pre_neurons.T, post_neurons_lr) - np.sum(post_neurons_lr, 0)*W)
 		
-		#update weights		
+		#update weights	
 		mask = np.all(W+dW>0.0, axis=0) #prevents weight change for entire hidden neuron if any weight of this neuron would become negative
 		W[:,mask] += dW[:,mask]
 

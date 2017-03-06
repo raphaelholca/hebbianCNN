@@ -22,19 +22,19 @@ reload(helper)
 reload(hebbian_cnn)
 
 """ initialise parameters """
-parameter_dict = {	'conv_dHigh'			: 2.7,
-					'conv_dMid' 			: 0.01,
-					'conv_dNeut' 			: -0.07 ,
-					'conv_dLow' 			: -1.9,
+parameter_dict = {	'conv_dHigh'			: 0.0,
+					'conv_dMid' 			: 0.1,
+					'conv_dNeut' 			: -0.0,
+					'conv_dLow' 			: -0.0,
 					'feedf_dHigh'			: 6.0,
-					'feedf_dMid' 			: 0.1, #0.05, 
-					'feedf_dNeut' 			: -0.05,
-					'feedf_dLow' 			: -1.0, #-2.0,
-					'name' 					: '7_conv_greedy_feedf_hebb_launch',
+					'feedf_dMid' 			: 0.01, #0.1, 
+					'feedf_dNeut' 			: -0.5,
+					'feedf_dLow' 			: -1.0,
+					'name' 					: '12_conv_xplr_feedf_xplr_3',
 					'n_epi_crit' 			: 6,
 					'n_epi_dopa' 			: 6,
 					'A' 					: 900.,
-					'lr_conv' 				: 1e-6,
+					'lr_conv' 				: 1e-6, #1e-6,
 					'lr_feedf' 				: 0.01,
 					't_conv'				: 1.0,
 					't_feedf'				: 1.0,
@@ -43,11 +43,11 @@ parameter_dict = {	'conv_dHigh'			: 2.7,
 					'conv_filter_side'		: 5,
 					'subs_stride' 			: 2,
 					'feedf_neuron_num'		: 49,
-					'explore_layer'			: 'none',
-					'dopa_layer'			: 'conv',
+					'explore_layer'			: 'conv',
+					'dopa_layer'			: 'both',
 					'noise_explore'			: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: '', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
+					'init_file' 			: '', #'output/fs_pad_7_size_21_conv', #'output/pretrain_fsize_21_padsize_10', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
 					'seed' 					: 954,
 					'verbose'		 		: 1
 					}
