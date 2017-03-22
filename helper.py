@@ -236,7 +236,7 @@ def subsampling_numba(FM, SSM, ite, stride):
 	Args:
 		FM (3D numpy array): feature maps; size = (cMaps_side x cMaps_side x nFeatureMaps)
 		SSM (3D numpy array): empty subsampled feature maps to be filled; size = (cMaps_side/stride x cMaps_side/stride x nFeatureMaps)
-		ite (1D numpy array): iterator used over FM (contains np.arange(0, cMaps_side, 2))
+		ite (1D numpy array): iterator used over FM (contains np.arange(0, cMaps_side, stride))
 
 	returns:
 		3D numpy array; subsampled feature maps; size = (cMaps_side/stride x cMaps_side/stride nFeatureMaps)
@@ -616,6 +616,8 @@ def plot_perf_progress(net, epi_start=0):
 	ax.plot(X, net.perf_train[epi_start:]*100, lw=3, marker='o')
 	ax.scatter(len(net.perf_train.shape)+1, net.perf_test*100, lw=3, marker='x', s=50)
 
+	plt.figtext(0.25,0.92, "test perf: " + str(np.round(net.perf_test*100,2)) + "%", va='top')
+
 	fig.patch.set_facecolor('white')
 	ax.spines['right'].set_visible(False)
 	ax.spines['top'].set_visible(False)
@@ -641,6 +643,8 @@ def plot_perf_progress_multiruns(perf_train, perf_test, save_path_multiruns):
 	for r in range(n_runs):
 		ax.plot(X, perf_train[r]*100, lw=3, marker='o', c=colors[r])
 		ax.scatter(X[-1], perf_test[r]*100, lw=3, marker='x', c=colors[r], s=50)
+
+	plt.figtext(0.25,0.92, "mean perf: " + str(np.round(np.mean(perf_test)*100,2)) + "%", va='top')
 
 	fig.patch.set_facecolor('white')
 	ax.spines['right'].set_visible(False)
