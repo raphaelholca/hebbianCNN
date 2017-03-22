@@ -523,7 +523,7 @@ def reconstruct(net, W, display_all=False):
 	filter_side = int(np.sqrt(np.size(net.conv_W,0)))
 	L1_map_num = np.size(net.conv_W,1)
 	n_pixels = net.images_side
-	stride = net.subs_stride
+	stride = net.subs_stride if hasattr(net, 'subs_stride') else 2
 	step=1 if n_pixels==18 else stride
 
 	conv_W_plot = np.reshape(net.conv_W, (filter_side, filter_side, L1_map_num))
@@ -625,7 +625,7 @@ def plot_perf_progress(net, epi_start=0):
 	ax.set_xticks(np.arange(1, len(net.perf_train[epi_start:])+1))
 	ax.xaxis.set_ticks_position('bottom')
 	ax.yaxis.set_ticks_position('left')
-	ax.set_ylim([60,97])
+	ax.set_ylim([60,100])
 	ax.set_xlabel('training episodes', fontsize=18)
 	ax.set_ylabel('trainig error (%)', fontsize=18)
 	plt.tight_layout()
