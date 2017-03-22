@@ -32,32 +32,32 @@ parameter_dict = {	'conv_dHigh'			: 0.5,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_conv_fsize_9_explor_convnoise_4',
+					'name' 					: 'pypet_conv_fsize_27_explor_convnoise_0-5_3',
 					'n_epi_crit' 			: 0,
-					'n_epi_dopa' 			: 6,
+					'n_epi_dopa' 			: 10,
 					'A' 					: 900.,
-					'lr_conv' 				: 2e-6, ##
+					'lr_conv' 				: 2e-04, ##
 					'lr_feedf' 				: 0.01,
 					't_conv'				: 1.0,
 					't_feedf'				: 1.0,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
-					'conv_filter_side'		: 9,
+					'conv_filter_side'		: 27,
 					'subs_stride' 			: 2,
-					'feedf_neuron_num'		: 49,
-					'explore_layer'			: 'feedf',
-					'dopa_layer'			: 'feedf',
-					'noise_explore_conv'	: 0.8,
+					'feedf_neuron_num'		: 16,
+					'explore_layer'			: 'conv',
+					'dopa_layer'			: 'conv',
+					'noise_explore_conv'	: 0.5,
 					'noise_explore_feedf'	: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: 'output/pretrain_fsize_9/pretrain_fsize_9', #'output/pretrain_lr_e-6_t_e-0/pretrain_lr_e-6_t_e-0_1',
+					'init_file' 			: 'output/pretrain_fsize_27/pretrain_fsize_27', #'output/pretrain_lr_e-6_t_e-0/pretrain_lr_e-6_t_e-0_1',
 					'seed' 					: 954
 					}
 
 """ explored parameters """
 explore_dict = {	
-					'conv_dHigh'			: [+2.0, +4.0, +6.0],
-					'conv_dNeut'			: [-1.0, -0.5, -0.1],
+					'conv_dHigh'			: [-1.0, +0.0, +1.0],
+					'conv_dNeut'			: [-3.0, -2.0, -1.0],
 
 					'conv_dMid'				: [+0.0, +0.1, +0.5],
 					'conv_dLow'				: [-4.0, -2.0, -1.0]
