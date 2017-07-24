@@ -32,17 +32,17 @@ parameter_dict = {	'conv_dHigh'			: 0.5,
 					'feedf_dMid' 			: 0.02,
 					'feedf_dNeut' 			: 0.01, 
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'pypet_conv_fsize_27_explor_convnoise_0-5_3',
+					'name' 					: 'pypet_cross_val',
 					'n_epi_crit' 			: 0,
 					'n_epi_dopa' 			: 10,
 					'A' 					: 900.,
-					'lr_conv' 				: 2e-04, ##
+					'lr_conv' 				: 1e-6,
 					'lr_feedf' 				: 0.01,
 					't_conv'				: 1.0,
 					't_feedf'				: 1.0,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
-					'conv_filter_side'		: 27,
+					'conv_filter_side'		: 5,
 					'subs_stride' 			: 2,
 					'feedf_neuron_num'		: 16,
 					'explore_layer'			: 'conv',
@@ -50,23 +50,23 @@ parameter_dict = {	'conv_dHigh'			: 0.5,
 					'noise_explore_conv'	: 0.5,
 					'noise_explore_feedf'	: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: 'output/pretrain_fsize_27/pretrain_fsize_27', #'output/pretrain_lr_e-6_t_e-0/pretrain_lr_e-6_t_e-0_1',
+					'init_file' 			: 'output/pretrain_lr_e-6_t_e-0/pretrain_lr_e-6_t_e-0',
 					'seed' 					: 954
 					}
 
 """ explored parameters """
 explore_dict = {	
-					'conv_dHigh'			: [-1.0, +0.0, +1.0],
-					'conv_dNeut'			: [-3.0, -2.0, -1.0],
+					# 'conv_dHigh'			: [+2.0, +4.0, +6.0],
+					# 'conv_dNeut'			: [-1.0, -0.5, -0.1],
 
-					'conv_dMid'				: [+0.0, +0.1, +0.5],
-					'conv_dLow'				: [-4.0, -2.0, -1.0]
+					# 'conv_dMid'				: [+0.0, +0.1, +0.5],
+					# 'conv_dLow'				: [-4.0, -2.0, -1.0]
 
-					# 'feedf_dHigh'			: [+2.00, +6.00, +10.0],
-					# 'feedf_dNeut'			: [-1.00, -0.50, -0.10],
+					'feedf_dHigh'			: [+2.00, +6.00, +10.0],
+					'feedf_dNeut'			: [-1.00, -0.50, -0.10],
 					
-					# 'feedf_dMid'			: [+0.00, +0.01, +0.10],
-					# 'feedf_dLow'			: [-2.00, -1.00, -0.00]
+					'feedf_dMid'			: [+0.00, +0.01, +0.10],
+					'feedf_dLow'			: [-2.00, -1.00, -0.00]
 					
 					# 'conv_dMid'			: [-1.0, +0.0, +0.1],
 					# 'conv_dLow'			: [-5.0, -2.0, -1.0, +0.0, +1.00],
@@ -82,6 +82,7 @@ images_train, labels_train, images_test, labels_test = helper.load_images(
 																			dataset_path 	= '/Users/raphaelholca/Documents/data-sets/MNIST',
 																			pad_size 		= (parameter_dict['conv_filter_side']-1)/2,
 																			load_test 		= True
+																			cross_validate	= 'search'
 																			)
 
 """ create directory to save data """
@@ -98,7 +99,7 @@ env = pypet.Environment(trajectory 		= 'explore_perf',
 						log_stdout		= False,
 						add_time 		= False,
 						multiproc 		= True,
-						ncores 			= 6,
+						ncores 			= 12,
 						filename		=  os.path.join(save_path, 'explore_perf.hdf5'))
 
 
