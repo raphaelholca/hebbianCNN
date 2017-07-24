@@ -27,7 +27,7 @@ def check_values(net):
 	if net.classifier not in ['neural_dopa', 'neural_prob']:
 		raise ValueError ('Invalid classifier parameter: %s ; should be one of: \'neural_dopa\', \'neural_prob\'') %net.classifier
 
-def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True):
+def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True, cross_validate=None):
 	""" load images training and testing images """
 	
 	if not os.path.exists(dataset_path):
@@ -37,7 +37,12 @@ def load_images(classes, dataset_train, dataset_path, pad_size=2, load_test=True
 
 	images_train, labels_train 	= load_preprocess_mnist(classes, dataset_train, dataset_path, pad_size)
 
-	if load_test:
+	if cross_validate=='search':
+		split_idx=int(len(labels_train)*5./6.)
+		images_train, labels_train, images_test, labels_test = shuffle_datasets(images_train, labels_train, np.empty((0,images_train.shape[1],images_train.shape[2])), np.empty(0), split_idx=split_idx)
+	elif cross_validate=='test':
+		images_test, labels_test = load_preprocess_mnist(classes, 'test', dataset_path, pad_size)
+	elif load_test:
 		dataset_test = 'test' if dataset_train=='train' else 'train'
 		images_test, labels_test = load_preprocess_mnist(classes, dataset_test, dataset_path, pad_size)
 		images_train, labels_train, images_test, labels_test = shuffle_datasets(images_train, labels_train, images_test, labels_test)
@@ -122,7 +127,7 @@ def add_padding(images, pad_size, pad_value=0.):
 	images_padded[:, pad_size:sqrt_pixels+pad_size, pad_size:sqrt_pixels+pad_size] = images
 	return images_padded
 
-def shuffle_datasets(images_train, labels_train, images_test, labels_test):
+def shuffle_datasets(images_train, labels_train, images_test, labels_test, split_idx=None):
 	""" shuffle test and train datasets """
 
 	#concatenate images and labels
@@ -136,7 +141,7 @@ def shuffle_datasets(images_train, labels_train, images_test, labels_test):
 	labels_conca = labels_conca[idx_shuffle]
 
 	#split concatenated images and labels into train and test datasets
-	split_idx = len(labels_train)
+	split_idx = len(labels_train) if split_idx is None else split_idx
 	images_train, images_test = images_conca[:split_idx,:], images_conca[split_idx:,:]
 	labels_train, labels_test = labels_conca[:split_idx], labels_conca[split_idx:]
 
@@ -753,12 +758,13 @@ def multiruns_init(n_runs, parameter_dict, save_path):
 		return perf_train_all, perf_test_all, save_path_multiruns, save_path, init_dir, all_init_files
 	else:
 		return None, None, None, save_path, None, None
-def multiruns_init_run(n_runs, r, images_train, labels_train, images_test, labels_test, parameter_dict, init_dir, all_init_files):
+def multiruns_init_run(n_runs, r, images_train, labels_train, images_test, labels_test, parameter_dict, init_dir, all_init_files, cross_validate=None):
 	""" initialise mutliple runs """
 	if n_runs > 1:
 		print "\nrun: %d/%d" % (r+1, n_runs)
 		parameter_dict['seed'] += r
-		images_train, labels_train, images_test, labels_test = shuffle_datasets(images_train, labels_train, images_test, labels_test)
+		if cross_validate != 'test':
+			images_train, labels_train, images_test, labels_test = shuffle_datasets(images_train, labels_train, images_test, labels_test)
 		if init_dir != '': parameter_dict['init_file'] = os.path.join(init_dir, all_init_files[r])
 
 	return images_train, labels_train, images_test, labels_test, parameter_dict
