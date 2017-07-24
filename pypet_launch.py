@@ -56,17 +56,17 @@ parameter_dict = {	'conv_dHigh'			: 0.5,
 
 """ explored parameters """
 explore_dict = {	
-					'conv_dHigh'			: [+2.0, +4.0, +6.0],
-					'conv_dNeut'			: [-1.0, -0.5, -0.1],
+					# 'conv_dHigh'			: [+2.0, +4.0, +6.0],
+					# 'conv_dNeut'			: [-1.0, -0.5, -0.1],
 
-					'conv_dMid'				: [+0.0, +0.1, +0.5],
-					'conv_dLow'				: [-4.0, -2.0, -1.0]
+					# 'conv_dMid'				: [+0.0, +0.1, +0.5],
+					# 'conv_dLow'				: [-4.0, -2.0, -1.0]
 
-					# 'feedf_dHigh'			: [+2.00, +6.00, +10.0],
-					# 'feedf_dNeut'			: [-1.00, -0.50, -0.10],
+					'feedf_dHigh'			: [+2.00, +6.00, +10.0],
+					'feedf_dNeut'			: [-1.00, -0.50, -0.10],
 					
-					# 'feedf_dMid'			: [+0.00, +0.01, +0.10],
-					# 'feedf_dLow'			: [-2.00, -1.00, -0.00]
+					'feedf_dMid'			: [+0.00, +0.01, +0.10],
+					'feedf_dLow'			: [-2.00, -1.00, -0.00]
 					
 					# 'conv_dMid'			: [-1.0, +0.0, +0.1],
 					# 'conv_dLow'			: [-5.0, -2.0, -1.0, +0.0, +1.00],
