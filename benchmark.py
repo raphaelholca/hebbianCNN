@@ -5,14 +5,14 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
-from sklearn.neural_network import MLPClassifier
+import numpy as np
 
 batch_size = 128
 num_classes = 10
 epochs = 50
 n_runs = 5
 
-net = 'shallow' #'shallow' 'conv'
+net = 'conv' #'shallow' 'conv'
 
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -48,7 +48,7 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 all_scores = np.zeros(n_runs)
 
-for r in n_runs:
+for r in range(n_runs):
 
 	if net=='shallow':
 		""" keras """
