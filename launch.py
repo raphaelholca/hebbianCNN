@@ -22,33 +22,33 @@ reload(helper)
 reload(hebbian_cnn)
 
 """ initialise parameters """
-parameter_dict = {	'conv_dHigh'			: 0.0,
+parameter_dict = {	'conv_dHigh'			: 2.7,
 					'conv_dMid' 			: 0.1,
-					'conv_dNeut' 			: -2.0,
-					'conv_dLow' 			: -2.0,
+					'conv_dNeut' 			: -0.07,
+					'conv_dLow' 			: 1.0,
 					'feedf_dHigh'			: 6.0,
-					'feedf_dMid' 			: 0.3, #0.01, 0.1, 
+					'feedf_dMid' 			: 0.01, #0.01, 0.1, 
 					'feedf_dNeut' 			: -0.6,
 					'feedf_dLow' 			: -2.0,
-					'name' 					: 'fs_size_27_conv_explor_2',
+					'name' 					: 'DA_cross_val',
 					'n_epi_crit' 			: 0,
 					'n_epi_dopa' 			: 10,
 					'A' 					: 900.,
-					'lr_conv' 				: 1e-4, #1e-6,
+					'lr_conv' 				: 1e-6, #1e-6,
 					'lr_feedf' 				: 0.01,
 					't_conv'				: 1.0,
 					't_feedf'				: 1.0,
 					'batch_size' 			: 196,
 					'conv_map_num' 			: 20,
-					'conv_filter_side'		: 27,
+					'conv_filter_side'		: 5,
 					'subs_stride' 			: 2,
-					'feedf_neuron_num'		: 16,
-					'explore_layer'			: 'conv',
-					'dopa_layer'			: 'conv',
+					'feedf_neuron_num'		: 49,
+					'explore_layer'			: 'feedf',
+					'dopa_layer'			: 'both',
 					'noise_explore_conv'	: 0.5,
 					'noise_explore_feedf'	: 0.2,
 					'classifier'			: 'neural_prob',
-					'init_file' 			: 'output/pretrain_fsize_27', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
+					'init_file' 			: 'output/pretrain_lr_e-6_t_e-0', #'output/pretrain_lr_e-6_t_e-0_nolearn_conv', #'output/pretrain_lr_e-6_t_e-0'
 					'seed' 					: 954,
 					'verbose'		 		: 1
 					}
@@ -64,7 +64,7 @@ images_train, labels_train, images_test, labels_test = helper.load_images(
 																			cross_validate	= 'test'
 																			)
 
-n_runs = 3
+n_runs = 5
 
 run_start = time.time()
 save_path = os.path.join('output', parameter_dict['name'])
